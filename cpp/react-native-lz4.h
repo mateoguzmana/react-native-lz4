@@ -3,6 +3,7 @@
 
 namespace lz4 {
   double multiply(double a, double b);
+  int getLz4VersionNumber();
 }
 
 #endif /* LZ4_H */

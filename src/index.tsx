@@ -27,3 +27,7 @@ const Lz4 = Lz4Module
 export function multiply(a: number, b: number): Promise<number> {
   return Lz4.multiply(a, b);
 }
+
+export function getLz4VersionNumber(): Promise<string> {
+  return Lz4.getLz4VersionNumber();
+}
