@@ -6,6 +6,8 @@ set (CMAKE_CXX_STANDARD 14)
 
 add_library(react-native-lz4            SHARED
             ../cpp/react-native-lz4.cpp
+            ../cpp/lz4.h
+            ../cpp/lz4.c
             cpp-adapter.cpp
 )
 

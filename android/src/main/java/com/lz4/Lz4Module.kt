@@ -18,7 +18,18 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
     promise.resolve(a * b)
   }
 
+  @ReactMethod
+  override fun getLz4VersionNumber(promise: Promise) {
+    promise.resolve(nativeGetLz4VersionNumber())
+  }
+
   companion object {
     const val NAME = "Lz4"
   }
+
+  init {
+    System.loadLibrary("react-native-lz4")
+  }
+
+  external fun nativeGetLz4VersionNumber(): Int
 }
