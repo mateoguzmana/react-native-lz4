@@ -4,7 +4,7 @@
 
 namespace lz4 {
 	double multiply(double a, double b) {
-		return a * b;
+		return a * b * 3;
 	}
 
 	int getLz4VersionNumber() {

@@ -7,7 +7,7 @@ export default function App() {
   const [version, setVersion] = useState<string | undefined>();
 
   useEffect(() => {
-    multiply(3, Math.LOG2E).then(setResult);
+    multiply(3, 10).then(setResult);
     getLz4VersionNumber().then(setVersion);
   }, []);
 

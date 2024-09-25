@@ -15,7 +15,7 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
   // See https://reactnative.dev/docs/native-modules-android
   @ReactMethod
   override fun multiply(a: Double, b: Double, promise: Promise) {
-    promise.resolve(a * b)
+    promise.resolve(nativeMultiply(a, b))
   }
 
   @ReactMethod
@@ -31,5 +31,6 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
     System.loadLibrary("react-native-lz4")
   }
 
+  external fun nativeMultiply(a: Double, b: Double): Double
   external fun nativeGetLz4VersionNumber(): Int
 }
