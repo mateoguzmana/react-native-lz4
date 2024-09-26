@@ -40,6 +40,16 @@ RCT_EXPORT_METHOD(compressFile:(NSString *)sourcePath
     resolve(@(result));
 }
 
+RCT_EXPORT_METHOD(decompressFile:(NSString *)sourcePath
+                  destinationPath:(NSString *)destinationPath
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+    bool result = lz4::decompressFile(sourcePath.UTF8String, destinationPath.UTF8String);
+
+    resolve(@(result));
+}
+
 // Don't compile this code when we build for the old architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:

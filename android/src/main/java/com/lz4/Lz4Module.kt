@@ -11,8 +11,6 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
     return NAME
   }
 
-  // Example method
-  // See https://reactnative.dev/docs/native-modules-android
   @ReactMethod
   override fun multiply(a: Double, b: Double, promise: Promise) {
     promise.resolve(nativeMultiply(a, b))
@@ -33,6 +31,11 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
     promise.resolve(nativeCompressFile(sourcePath, destinationPath))
   }
 
+  @ReactMethod
+  override fun decompressFile(sourcePath: String, destinationPath: String, promise: Promise) {
+    promise.resolve(nativeDecompressFile(sourcePath, destinationPath))
+  }
+
   companion object {
     const val NAME = "Lz4"
   }
@@ -45,4 +48,5 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
   external fun nativeGetLz4VersionNumber(): Int
   external fun nativeGetLz4VersionString(): String
   external fun nativeCompressFile(sourcePath: String, destinationPath: String): Boolean
+  external fun nativeDecompressFile(sourcePath: String, destinationPath: String): Boolean
 }

@@ -10,15 +10,17 @@ npm install react-native-lz4
 
 ## Usage
 
+```ts
+import { compressFile, decompressFile } from 'react-native-lz4';
 
-```js
-import { multiply } from 'react-native-lz4';
+const compressFileResult = await compressFile('path/to/file', 'path/to/output');
+const decompressFileResult = await decompressFile(
+  'path/to/file',
+  'path/to/output'
+);
 
-// ...
-
-const result = await multiply(3, 7);
+console.log({ compressFileResult, decompressFileResult });
 ```
-
 
 ## Contributing
 
