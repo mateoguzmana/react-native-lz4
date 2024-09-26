@@ -12,11 +12,6 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun multiply(a: Double, b: Double, promise: Promise) {
-    promise.resolve(nativeMultiply(a, b))
-  }
-
-  @ReactMethod
   override fun getLz4VersionNumber(promise: Promise) {
     promise.resolve(nativeGetLz4VersionNumber())
   }
@@ -44,7 +39,6 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
     System.loadLibrary("react-native-lz4")
   }
 
-  external fun nativeMultiply(a: Double, b: Double): Double
   external fun nativeGetLz4VersionNumber(): Int
   external fun nativeGetLz4VersionString(): String
   external fun nativeCompressFile(sourcePath: String, destinationPath: String): Boolean

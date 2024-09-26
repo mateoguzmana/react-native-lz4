@@ -43,11 +43,6 @@ void ensureDirectoriesExist(const std::string &filePath)
 
 namespace lz4
 {
-	double multiply(double a, double b)
-	{
-		return a * b * 3;
-	}
-
 	int getLz4VersionNumber()
 	{
 		int version = LZ4_versionNumber();

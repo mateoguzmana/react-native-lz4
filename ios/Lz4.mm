@@ -3,16 +3,6 @@
 @implementation Lz4
 RCT_EXPORT_MODULE()
 
-RCT_EXPORT_METHOD(multiply:(double)a
-                  b:(double)b
-                  resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject)
-{
-    NSNumber *result = @(lz4::multiply(a, b));
-
-    resolve(result);
-}
-
 RCT_EXPORT_METHOD(getLz4VersionNumber:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 {

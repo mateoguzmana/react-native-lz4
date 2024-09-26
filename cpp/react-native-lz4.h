@@ -5,7 +5,6 @@
 
 namespace lz4
 {
-  double multiply(double a, double b);
   int getLz4VersionNumber();
   std::string getLz4VersionString();
   bool compressFile(const std::string &sourcePath, const std::string &destinationPath);
