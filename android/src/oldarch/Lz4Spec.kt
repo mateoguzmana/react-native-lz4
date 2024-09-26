@@ -9,4 +9,5 @@ abstract class Lz4Spec internal constructor(context: ReactApplicationContext) :
 
   abstract fun multiply(a: Double, b: Double, promise: Promise)
   abstract fun getLz4VersionNumber(promise: Promise)
+  abstract fun getLz4VersionString(promise: Promise)
 }

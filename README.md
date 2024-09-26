@@ -1,6 +1,6 @@
 # react-native-lz4
 
-LZ4 – Extremely Fast Compression algorithm bind for React Native
+LZ4 – React Native bindings for an extremely fast compression algorithm.
 
 ## Installation
 

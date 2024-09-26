@@ -23,6 +23,11 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
     promise.resolve(nativeGetLz4VersionNumber())
   }
 
+  @ReactMethod
+  override fun getLz4VersionString(promise: Promise) {
+    promise.resolve(nativeGetLz4VersionString())
+  }
+
   companion object {
     const val NAME = "Lz4"
   }
@@ -33,4 +38,5 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
 
   external fun nativeMultiply(a: Double, b: Double): Double
   external fun nativeGetLz4VersionNumber(): Int
+  external fun nativeGetLz4VersionString(): String
 }

@@ -28,6 +28,10 @@ export function multiply(a: number, b: number): Promise<number> {
   return Lz4.multiply(a, b);
 }
 
-export function getLz4VersionNumber(): Promise<string> {
+export function getLz4VersionNumber(): Promise<number> {
   return Lz4.getLz4VersionNumber();
+}
+
+export function getLz4VersionString(): Promise<string> {
+  return Lz4.getLz4VersionString();
 }
