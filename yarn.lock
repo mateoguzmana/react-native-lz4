@@ -10830,6 +10830,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-image-picker@npm:^7.1.2":
+  version: 7.1.2
+  resolution: "react-native-image-picker@npm:7.1.2"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: af52328b7cb06c28549442f0d923cfa92dde8d5a968a642336df4c882f81adbf0e5e606a14de27f96883a76fa1e03230061c4080011c9107942edebc8e09c478
+  languageName: node
+  linkType: hard
+
 "react-native-lz4-example@workspace:example":
   version: 0.0.0-use.local
   resolution: "react-native-lz4-example@workspace:example"
@@ -10844,6 +10854,7 @@ __metadata:
     react: 18.3.1
     react-native: 0.75.3
     react-native-builder-bob: ^0.30.2
+    react-native-image-picker: ^7.1.2
     react-native-test-app: ^3.10.8
   languageName: unknown
   linkType: soft

@@ -40,5 +40,7 @@ export function compressFile(
   sourcePath: string,
   destinationPath: string
 ): Promise<boolean> {
-  return Lz4.compressFile(sourcePath, destinationPath);
+  const strippedSourcePath = sourcePath.replace('file://', '');
+
+  return Lz4.compressFile(strippedSourcePath, destinationPath);
 }
