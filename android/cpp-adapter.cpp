@@ -19,3 +19,15 @@ Java_com_lz4_Lz4Module_nativeGetLz4VersionString(JNIEnv *env, jclass type) {
     std::string version = lz4::getLz4VersionString();
     return env->NewStringUTF(version.c_str());
 }
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_lz4_Lz4Module_nativeCompressFile(JNIEnv *env, jclass type, jstring sourcePath, jstring destinationPath) {
+    const char *sourcePathChars = env->GetStringUTFChars(sourcePath, 0);
+    const char *destinationPathChars = env->GetStringUTFChars(destinationPath, 0);
+    std::string sourcePathString = std::string(sourcePathChars);
+    std::string destinationPathString = std::string(destinationPathChars);
+    env->ReleaseStringUTFChars(sourcePath, sourcePathChars);
+    env->ReleaseStringUTFChars(destinationPath, destinationPathChars);
+    return lz4::compressFile(sourcePathString, destinationPathString);
+}

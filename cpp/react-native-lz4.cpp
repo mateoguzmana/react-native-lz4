@@ -1,6 +1,6 @@
 #include "react-native-lz4.h"
-#include <stdio.h>
 #include "lz4.h"
+#include <stdio.h>
 #include <string>
 
 namespace lz4 {
@@ -17,4 +17,9 @@ namespace lz4 {
         const char* version = LZ4_versionString();
         return std::string(version);
     }
+
+	bool compressFile(const std::string &sourcePath, const std::string &destinationPath) {
+		printf("Compressing file %s to %s\n", sourcePath.c_str(), destinationPath.c_str());
+		return true;
+	}
 }

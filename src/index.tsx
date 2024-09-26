@@ -35,3 +35,10 @@ export function getLz4VersionNumber(): Promise<number> {
 export function getLz4VersionString(): Promise<string> {
   return Lz4.getLz4VersionString();
 }
+
+export function compressFile(
+  sourcePath: string,
+  destinationPath: string
+): Promise<boolean> {
+  return Lz4.compressFile(sourcePath, destinationPath);
+}

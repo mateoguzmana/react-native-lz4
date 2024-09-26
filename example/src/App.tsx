@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, Button } from 'react-native';
 import {
+  compressFile,
   getLz4VersionNumber,
   getLz4VersionString,
   multiply,
@@ -10,6 +11,12 @@ export default function App() {
   const [result, setResult] = useState<number | undefined>();
   const [versionNumber, setVersionNumber] = useState<number | undefined>();
   const [versionString, setVersionString] = useState<string | undefined>();
+
+  const executeCompressFile = async () => {
+    const compressFileResult = await compressFile('melongo', 'melani');
+
+    console.log(compressFileResult);
+  };
 
   useEffect(() => {
     multiply(3, 10).then(setResult);
@@ -24,6 +31,8 @@ export default function App() {
       <Text>LZ4 Version Number: {versionNumber}</Text>
 
       <Text>LZ4 Version String: {versionString}</Text>
+
+      <Button title="Compress File" onPress={executeCompressFile} />
     </View>
   );
 }

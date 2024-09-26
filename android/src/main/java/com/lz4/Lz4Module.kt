@@ -28,6 +28,11 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
     promise.resolve(nativeGetLz4VersionString())
   }
 
+  @ReactMethod
+  override fun compressFile(sourcePath: String, destinationPath: String, promise: Promise) {
+    promise.resolve(nativeCompressFile(sourcePath, destinationPath))
+  }
+
   companion object {
     const val NAME = "Lz4"
   }
@@ -39,4 +44,5 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
   external fun nativeMultiply(a: Double, b: Double): Double
   external fun nativeGetLz4VersionNumber(): Int
   external fun nativeGetLz4VersionString(): String
+  external fun nativeCompressFile(sourcePath: String, destinationPath: String): Boolean
 }
