@@ -201,68 +201,6 @@ namespace lz4
 		return std::string(version);
 	}
 
-	bool legacy_compressFile(const std::string &sourcePath, const std::string &destinationPath)
-	{
-		printf("Compressing file %s to %s\n", sourcePath.c_str(), destinationPath.c_str());
-
-		// Open the input file
-		std::ifstream inputFile(sourcePath, std::ios::binary);
-		if (!inputFile.is_open())
-		{
-			std::cerr << "Error opening input file: " << sourcePath << std::endl;
-			return false;
-		}
-
-		// Read file into buffer
-		inputFile.seekg(0, std::ios::end);
-		size_t inputSize = inputFile.tellg();
-		inputFile.seekg(0, std::ios::beg);
-
-		std::vector<char> inputBuffer(inputSize);
-		inputFile.read(inputBuffer.data(), inputSize);
-		inputFile.close();
-
-		// Allocate buffer for compressed data
-		int maxCompressedSize = LZ4_compressBound(inputSize);
-		std::vector<char> compressedBuffer(maxCompressedSize);
-
-		printf("Compressing %lu bytes to %d bytes\n", inputSize, maxCompressedSize);
-
-		// Compress the data
-		int compressedSize = LZ4_compress_default(
-			inputBuffer.data(),		 // Source
-			compressedBuffer.data(), // Destination
-			inputSize,				 // Input size
-			maxCompressedSize		 // Max compressed size
-		);
-
-		if (compressedSize <= 0)
-		{
-			std::cerr << "Compression failed." << std::endl;
-			return false;
-		}
-
-		// Ensure the destination directory exists – @TODO: maybe this is not necessary. Double check when testing more the uncompressed file.
-		ensureDirectoriesExist(destinationPath);
-
-		// Open the output file to save the compressed data
-		std::ofstream outputFile(destinationPath, std::ios::binary);
-		if (!outputFile.is_open())
-		{
-			std::cerr << "Error opening output file: " << destinationPath << std::endl;
-			std::cerr << "Error: " << strerror(errno) << std::endl;
-			return false;
-		}
-
-		// Write the compressed data
-		outputFile.write(compressedBuffer.data(), compressedSize);
-		outputFile.close();
-
-		std::cout << "File compressed successfully: " << destinationPath << std::endl;
-
-		return true;
-	}
-
 	bool legacy_decompressFile(const std::string &sourcePath, const std::string &destinationPath)
 	{
 		printf("Decompressing file %s to %s\n", sourcePath.c_str(), destinationPath.c_str());
@@ -331,15 +269,13 @@ namespace lz4
 		const char* sourcePathCStr = sourcePath.c_str();
 		const char* destinationPathCStr = destinationPath.c_str();
 
-		// If a char* is needed, allocate a buffer and copy the content.
 		char* sourcePathMutable = strdup(sourcePathCStr); // Create mutable char* from const char*
 		char* destinationPathMutable = strdup(destinationPathCStr); // Create mutable char* from const char*
 
-		/* compress */
-		FILE* const inpFp = fopen(sourcePath.c_str(), "rb");
-		FILE* const outFp = fopen(destinationPath.c_str(), "wb");
+		FILE* const inpFp = fopen(sourcePathCStr, "rb");
+		FILE* const outFp = fopen(destinationPathCStr, "wb");
 
-		printf("compress : %s -> %s\n", sourcePath.c_str(), destinationPath.c_str());
+		printf("compress : %s -> %s\n", sourcePathCStr, destinationPathCStr);
 
 		LZ4F_errorCode_t ret = compress_file(inpFp, outFp);
 

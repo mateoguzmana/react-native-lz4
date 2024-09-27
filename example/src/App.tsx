@@ -39,12 +39,16 @@ export default function App() {
           return;
         }
 
+        const sourcePath = asset.uri;
+        const destinationPath = asset.uri.replace(/(.*)(\..*)/, '$1.lz4');
+
         const compressFileResult = await compressFile(
           // '/Users/mateoguzman/Library/Developer/CoreSimulator/Devices/8EA59C5A-23FA-4BFD-8159-D8FBA3A46D7B/data/Containers/Data/Application/A4C994AC-7778-4B60-AD74-6766E2CE1283/tmp/44307235-C5D8-4533-98E8-DB2F76502344.jpg',
           // 'data/user/0/lz4.example/cache/rn_image_picker_lib_temp_859be96a-cfaa-419f-9d48-0e6be30e8d00.png',
-          asset.uri,
+          sourcePath,
           // use the same uri as the source path to overwrite the file and with extension lz4
-          '/Users/mateoguzman/Library/Developer/CoreSimulator/Devices/8EA59C5A-23FA-4BFD-8159-D8FBA3A46D7B/data/Containers/Data/Application/A4C994AC-7778-4B60-AD74-6766E2CE1283/tmp.lz4'
+          // '/Users/mateoguzman/Library/Developer/CoreSimulator/Devices/8EA59C5A-23FA-4BFD-8159-D8FBA3A46D7B/data/Containers/Data/Application/A4C994AC-7778-4B60-AD74-6766E2CE1283/tmp.lz4'
+          destinationPath
         );
 
         console.log({ compressFileResult });

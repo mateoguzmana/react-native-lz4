@@ -37,8 +37,9 @@ export function compressFile(
   destinationPath: string
 ): Promise<boolean> {
   const strippedSourcePath = sourcePath.replace('file://', '');
+  const strippedDestinationPath = destinationPath.replace('file://', '');
 
-  return Lz4.compressFile(strippedSourcePath, destinationPath);
+  return Lz4.compressFile(strippedSourcePath, strippedDestinationPath);
 }
 
 export function decompressFile(
@@ -46,6 +47,7 @@ export function decompressFile(
   destinationPath: string
 ): Promise<boolean> {
   const strippedSourcePath = sourcePath.replace('file://', '');
+  const strippedDestinationPath = destinationPath.replace('file://', '');
 
-  return Lz4.decompressFile(strippedSourcePath, destinationPath);
+  return Lz4.decompressFile(strippedSourcePath, strippedDestinationPath);
 }
