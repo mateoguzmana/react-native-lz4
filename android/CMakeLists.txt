@@ -8,6 +8,15 @@ add_library(react-native-lz4            SHARED
             ../cpp/react-native-lz4.cpp
             ../cpp/lz4.h
             ../cpp/lz4.c
+            ../cpp/lz4hc.h
+            ../cpp/lz4hc.c
+            ../cpp/lz4frame.h
+            ../cpp/lz4frame.c
+            ../cpp/lz4frame_static.h
+            ../cpp/lz4file.h
+            ../cpp/lz4file.c
+            ../cpp/xxhash.h
+            ../cpp/xxhash.c
             cpp-adapter.cpp
 )
 

@@ -1,5 +1,9 @@
 #include "react-native-lz4.h"
 #include "lz4.h"
+#include "lz4file.h"
+#include "lz4frame.h"
+#include "lz4frame_static.h"
+#include "xxhash.h"
 #include <stdio.h>
 #include <string>
 #include <iostream>
@@ -9,6 +13,148 @@
 #include <sys/types.h>
 #include <cstring>
 #include <cerrno>
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define CHUNK_SIZE (16*1024)
+
+static size_t get_file_size(char *filename)
+{
+    struct stat statbuf;
+
+    if (filename == NULL) {
+        return 0;
+    }
+
+    if(stat(filename,&statbuf)) {
+        return 0;
+    }
+
+    return statbuf.st_size;
+}
+
+static int compress_file(FILE* f_in, FILE* f_out)
+{
+    assert(f_in != NULL); assert(f_out != NULL);
+
+    LZ4F_errorCode_t ret = LZ4F_OK_NoError;
+    size_t len;
+    LZ4_writeFile_t* lz4fWrite;
+    void* const buf = malloc(CHUNK_SIZE);
+    if (!buf) {
+        printf("error: memory allocation failed \n");
+        return 1;
+    }
+
+    /* Of course, you can also use prefsPtr to
+     * set the parameters of the compressed file
+     * NULL is use default
+     */
+    ret = LZ4F_writeOpen(&lz4fWrite, f_out, NULL);
+    if (LZ4F_isError(ret)) {
+        printf("LZ4F_writeOpen error: %s\n", LZ4F_getErrorName(ret));
+        free(buf);
+        return 1;
+    }
+
+    while (1) {
+        len = fread(buf, 1, CHUNK_SIZE, f_in);
+
+        if (ferror(f_in)) {
+            printf("fread error\n");
+            goto out;
+        }
+
+        /* nothing to read */
+        if (len == 0) {
+            break;
+        }
+
+        ret = LZ4F_write(lz4fWrite, buf, len);
+        if (LZ4F_isError(ret)) {
+            printf("LZ4F_write: %s\n", LZ4F_getErrorName(ret));
+            goto out;
+        }
+    }
+
+out:
+    free(buf);
+    if (LZ4F_isError(LZ4F_writeClose(lz4fWrite))) {
+        printf("LZ4F_writeClose: %s\n", LZ4F_getErrorName(ret));
+        return 1;
+    }
+
+    return 0;
+}
+
+int compareFiles(FILE* fp0, FILE* fp1)
+{
+    int result = 0;
+
+    while (result==0) {
+        char b0[1024];
+        char b1[1024];
+        size_t const r0 = fread(b0, 1, sizeof(b0), fp0);
+        size_t const r1 = fread(b1, 1, sizeof(b1), fp1);
+
+        result = (r0 != r1);
+        if (!r0 || !r1) break;
+        if (!result) result = memcmp(b0, b1, r0);
+    }
+
+    return result;
+}
+
+static int decompress_file(FILE* f_in, FILE* f_out)
+{
+    assert(f_in != NULL); assert(f_out != NULL);
+
+    LZ4F_errorCode_t ret = LZ4F_OK_NoError;
+    LZ4_readFile_t* lz4fRead;
+    void* const buf= malloc(CHUNK_SIZE);
+    if (!buf) {
+        printf("error: memory allocation failed \n");
+    }
+
+    ret = LZ4F_readOpen(&lz4fRead, f_in);
+    if (LZ4F_isError(ret)) {
+        printf("LZ4F_readOpen error: %s\n", LZ4F_getErrorName(ret));
+        free(buf);
+        return 1;
+    }
+
+    while (1) {
+        ret = LZ4F_read(lz4fRead, buf, CHUNK_SIZE);
+        if (LZ4F_isError(ret)) {
+            printf("LZ4F_read error: %s\n", LZ4F_getErrorName(ret));
+            goto out;
+        }
+
+        /* nothing to read */
+        if (ret == 0) {
+            break;
+        }
+
+        if(fwrite(buf, 1, ret, f_out) != ret) {
+            printf("write error!\n");
+            goto out;
+        }
+    }
+
+out:
+    free(buf);
+    if (LZ4F_isError(LZ4F_readClose(lz4fRead))) {
+        printf("LZ4F_readClose: %s\n", LZ4F_getErrorName(ret));
+        return 1;
+    }
+
+    if (ret) {
+        return 1;
+    }
+
+    return 0;
+}
 
 // Function to create a directory
 bool createDirectory(const std::string &path)
@@ -55,7 +201,7 @@ namespace lz4
 		return std::string(version);
 	}
 
-	bool compressFile(const std::string &sourcePath, const std::string &destinationPath)
+	bool legacy_compressFile(const std::string &sourcePath, const std::string &destinationPath)
 	{
 		printf("Compressing file %s to %s\n", sourcePath.c_str(), destinationPath.c_str());
 
@@ -117,7 +263,7 @@ namespace lz4
 		return true;
 	}
 
-	bool decompressFile(const std::string &sourcePath, const std::string &destinationPath)
+	bool legacy_decompressFile(const std::string &sourcePath, const std::string &destinationPath)
 	{
 		printf("Decompressing file %s to %s\n", sourcePath.c_str(), destinationPath.c_str());
 
@@ -176,6 +322,49 @@ namespace lz4
 
 		std::cout << "File decompressed successfully: " << destinationPath << std::endl;
 
+		return true;
+	}
+
+	bool compressFile(const std::string &sourcePath, const std::string &destinationPath)
+	{
+		// Get const char* from the strings (for places that expect const char*)
+		const char* sourcePathCStr = sourcePath.c_str();
+		const char* destinationPathCStr = destinationPath.c_str();
+
+		// If a char* is needed, allocate a buffer and copy the content.
+		char* sourcePathMutable = strdup(sourcePathCStr); // Create mutable char* from const char*
+		char* destinationPathMutable = strdup(destinationPathCStr); // Create mutable char* from const char*
+
+		/* compress */
+		FILE* const inpFp = fopen(sourcePath.c_str(), "rb");
+		FILE* const outFp = fopen(destinationPath.c_str(), "wb");
+
+		printf("compress : %s -> %s\n", sourcePath.c_str(), destinationPath.c_str());
+
+		LZ4F_errorCode_t ret = compress_file(inpFp, outFp);
+
+		fclose(inpFp);
+		fclose(outFp);
+
+		if (ret) {
+			printf("compression error: %s\n", LZ4F_getErrorName(ret));
+
+			return false;
+		}
+
+		printf("%s: %zu → %zu bytes, %.1f%%\n",
+			sourcePathMutable,
+			get_file_size(sourcePathMutable),
+			get_file_size(destinationPathMutable), /* might overflow is size_t is 32 bits and size_{in,out} > 4 GB */
+			(double)get_file_size(destinationPathMutable) / get_file_size(sourcePathMutable) * 100);
+
+		printf("compress : done\n");
+		
+		return true;
+	}
+
+	bool decompressFile(const std::string &sourcePath, const std::string &destinationPath)
+	{
 		return true;
 	}
 }
