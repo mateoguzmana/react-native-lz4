@@ -54,8 +54,9 @@ export default function App() {
         console.log({ compressFileResult });
 
         const decompressFileResult = await decompressFile(
-          '/Users/mateoguzman/Library/Developer/CoreSimulator/Devices/8EA59C5A-23FA-4BFD-8159-D8FBA3A46D7B/data/Containers/Data/Application/A4C994AC-7778-4B60-AD74-6766E2CE1283/tmp.lz4',
-          '/Users/mateoguzman/Library/Developer/CoreSimulator/Devices/8EA59C5A-23FA-4BFD-8159-D8FBA3A46D7B/data/Containers/Data/Application/A4C994AC-7778-4B60-AD74-6766E2CE1283/tmp.png'
+          destinationPath,
+          // add_dash_decompressed to the end of the file name
+          sourcePath.replace(/(.*)(\..*)/, '$1_decompressed$2')
         );
 
         console.log({ decompressFileResult });
@@ -77,6 +78,8 @@ export default function App() {
       <Text>LZ4 Version String: {versionString}</Text>
 
       <Button title="Compress File" onPress={executeCompressFile} />
+
+      <Button title="Decompress File" onPress={executeCompressFile} />
     </View>
   );
 }

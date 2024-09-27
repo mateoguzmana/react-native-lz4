@@ -1,9 +1,6 @@
 #include "react-native-lz4.h"
 #include "lz4.h"
 #include "lz4file.h"
-#include "lz4frame.h"
-#include "lz4frame_static.h"
-#include "xxhash.h"
 #include <stdio.h>
 #include <string>
 #include <iostream>
@@ -88,24 +85,6 @@ out:
     return 0;
 }
 
-int compareFiles(FILE* fp0, FILE* fp1)
-{
-    int result = 0;
-
-    while (result==0) {
-        char b0[1024];
-        char b1[1024];
-        size_t const r0 = fread(b0, 1, sizeof(b0), fp0);
-        size_t const r1 = fread(b1, 1, sizeof(b1), fp1);
-
-        result = (r0 != r1);
-        if (!r0 || !r1) break;
-        if (!result) result = memcmp(b0, b1, r0);
-    }
-
-    return result;
-}
-
 static int decompress_file(FILE* f_in, FILE* f_out)
 {
     assert(f_in != NULL); assert(f_out != NULL);
@@ -173,20 +152,6 @@ bool createDirectory(const std::string &path)
 	return true;
 }
 
-// Function to create all parent directories
-void ensureDirectoriesExist(const std::string &filePath)
-{
-	size_t pos = filePath.find_last_of('/');
-	if (pos != std::string::npos)
-	{
-		std::string directoryPath = filePath.substr(0, pos);
-		if (!createDirectory(directoryPath))
-		{
-			std::cerr << "Error ensuring directory path exists: " << directoryPath << std::endl;
-		}
-	}
-}
-
 namespace lz4
 {
 	int getLz4VersionNumber()
@@ -199,68 +164,6 @@ namespace lz4
 	{
 		const char *version = LZ4_versionString();
 		return std::string(version);
-	}
-
-	bool legacy_decompressFile(const std::string &sourcePath, const std::string &destinationPath)
-	{
-		printf("Decompressing file %s to %s\n", sourcePath.c_str(), destinationPath.c_str());
-
-		// Open the input file
-		std::ifstream inputFile(sourcePath, std::ios::binary);
-		if (!inputFile.is_open())
-		{
-			std::cerr << "Error opening input file: " << sourcePath << std::endl;
-			return false;
-		}
-
-		// Read file into buffer
-		inputFile.seekg(0, std::ios::end);
-		size_t compressedSize = inputFile.tellg();
-		inputFile.seekg(0, std::ios::beg);
-
-		std::vector<char> compressedBuffer(compressedSize);
-		inputFile.read(compressedBuffer.data(), compressedSize);
-		inputFile.close();
-
-		// Allocate buffer for decompressed data
-		int maxDecompressedSize = 1024 * 1024 * 1024; // 1 GB
-		std::vector<char> decompressedBuffer(maxDecompressedSize);
-
-		printf("Decompressing %lu bytes to %d bytes\n", compressedSize, maxDecompressedSize);
-
-		// Decompress the data
-		int decompressedSize = LZ4_decompress_safe(
-			compressedBuffer.data(),   // Source
-			decompressedBuffer.data(), // Destination
-			compressedSize,			   // Compressed size
-			maxDecompressedSize		   // Max decompressed size
-		);
-
-		if (decompressedSize <= 0)
-		{
-			std::cerr << "Decompression failed." << std::endl;
-			return false;
-		}
-
-		// Ensure the destination directory exists – @TODO: maybe this is not necessary.
-		ensureDirectoriesExist(destinationPath);
-
-		// Open the output file to save the decompressed data
-		std::ofstream outputFile(destinationPath, std::ios::binary);
-		if (!outputFile.is_open())
-		{
-			std::cerr << "Error opening output file: " << destinationPath << std::endl;
-			std::cerr << "Error: " << strerror(errno) << std::endl;
-			return false;
-		}
-
-		// Write the decompressed data
-		outputFile.write(decompressedBuffer.data(), decompressedSize);
-		outputFile.close();
-
-		std::cout << "File decompressed successfully: " << destinationPath << std::endl;
-
-		return true;
 	}
 
 	bool compressFile(const std::string &sourcePath, const std::string &destinationPath)
@@ -301,6 +204,26 @@ namespace lz4
 
 	bool decompressFile(const std::string &sourcePath, const std::string &destinationPath)
 	{
+		// Get const char* from the strings (for places that expect const char*)
+		const char* sourcePathCStr = sourcePath.c_str();
+		const char* destinationPathCStr = destinationPath.c_str();
+
+		FILE* const inpFp = fopen(sourcePathCStr, "rb");
+        FILE* const outFp = fopen(destinationPathCStr, "wb");
+
+        printf("decompress : %s -> %s\n", sourcePathCStr, destinationPathCStr);
+        LZ4F_errorCode_t ret = decompress_file(inpFp, outFp);
+
+        fclose(outFp);
+        fclose(inpFp);
+
+        if (ret) {
+            printf("compression error: %s\n", LZ4F_getErrorName(ret));
+            return 1;
+        }
+
+        printf("decompress : done\n");
+
 		return true;
 	}
 }
