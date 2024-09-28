@@ -1,4 +1,5 @@
 import { NativeModules, Platform } from 'react-native';
+import { formatFilePath } from './utils/formatFilePath';
 
 const LINKING_ERROR =
   `The package 'react-native-lz4' doesn't seem to be linked. Make sure: \n\n` +
@@ -36,8 +37,8 @@ export function compressFile(
   sourcePath: string,
   destinationPath: string
 ): Promise<boolean> {
-  const strippedSourcePath = sourcePath.replace('file://', '');
-  const strippedDestinationPath = destinationPath.replace('file://', '');
+  const strippedSourcePath = formatFilePath(sourcePath);
+  const strippedDestinationPath = formatFilePath(destinationPath);
 
   return Lz4.compressFile(strippedSourcePath, strippedDestinationPath);
 }
@@ -46,8 +47,8 @@ export function decompressFile(
   sourcePath: string,
   destinationPath: string
 ): Promise<boolean> {
-  const strippedSourcePath = sourcePath.replace('file://', '');
-  const strippedDestinationPath = destinationPath.replace('file://', '');
+  const strippedSourcePath = formatFilePath(sourcePath);
+  const strippedDestinationPath = formatFilePath(destinationPath);
 
   return Lz4.decompressFile(strippedSourcePath, strippedDestinationPath);
 }
