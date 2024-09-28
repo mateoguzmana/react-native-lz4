@@ -57,8 +57,32 @@ export function initializeLz4(): void {
   return Lz4.initializeLz4();
 }
 
-const g = global as any;
+interface Lz4Type {
+  lz4: {
+    getLz4VersionNumber: () => Promise<number>;
+    getLz4VersionString: () => Promise<string>;
+    compressFile: (
+      sourcePath: string,
+      destinationPath: string
+    ) => Promise<boolean>;
+  };
+}
+
+const _global = global as unknown as Lz4Type;
 
 export function globalGetLz4VersionNumber(): Promise<number> {
-  return g.lz4.getLz4VersionNumber();
+  return _global.lz4.getLz4VersionNumber();
+}
+
+export function globalGetLz4VersionString(): Promise<string> {
+  return _global.lz4.getLz4VersionString();
+}
+
+export function globalCompressFile(
+  sourcePath: string,
+  destinationPath: string
+): Promise<boolean> {
+  const strippedSourcePath = formatFilePath(sourcePath);
+  const strippedDestinationPath = formatFilePath(destinationPath);
+  return _global.lz4.compressFile(strippedSourcePath, strippedDestinationPath);
 }

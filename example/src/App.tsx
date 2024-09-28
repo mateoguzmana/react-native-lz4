@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Button } from 'react-native';
 import {
-  compressFile,
   decompressFile,
   getLz4VersionNumber,
   getLz4VersionString,
+  globalCompressFile,
   globalGetLz4VersionNumber,
+  globalGetLz4VersionString,
   initializeLz4,
 } from 'react-native-lz4';
 import {
@@ -34,7 +35,7 @@ export default function App() {
         const sourcePath = asset.uri;
         const destinationPath = asset.uri.replace(/(.*)(\..*)/, '$1.lz4');
 
-        const compressFileResult = await compressFile(
+        const compressFileResult = await globalCompressFile(
           sourcePath,
           destinationPath
         );
@@ -67,6 +68,11 @@ export default function App() {
     console.log({ globalVersionNumber });
   };
 
+  const printGlobalGetLz4VersionString = async () => {
+    const globalVersionString = await globalGetLz4VersionString();
+    console.log({ globalVersionString });
+  };
+
   useEffect(() => {
     initializeLz4();
     getLz4VersionNumber().then(setVersionNumber);
@@ -86,6 +92,11 @@ export default function App() {
       <Button
         title="Global Get LZ4 Version Number"
         onPress={printGlobalGetLz4VersionNumber}
+      />
+
+      <Button
+        title="Global Get LZ4 Version String"
+        onPress={printGlobalGetLz4VersionString}
       />
     </View>
   );
