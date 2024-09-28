@@ -49,18 +49,42 @@ interface Lz4Type {
 
 const _global = global as unknown as Lz4Type;
 
+/**
+ * Initializes the Lz4 module.
+ * This method should be called before any other method.
+ * By default, this method is called automatically when the module is imported.
+ */
 export function initializeLz4(): void {
   return Lz4.initializeLz4();
 }
 
+// Initialize the Lz4 module when the module is imported.
+(() => {
+  initializeLz4();
+})();
+
+/**
+ * Gets the version number of the Lz4 library.
+ * @returns The version number of the Lz4 library.
+ */
 export function getLz4VersionNumber(): Promise<number> {
   return _global.lz4.getLz4VersionNumber();
 }
 
+/**
+ * Gets the version string of the Lz4 library.
+ * @returns The version string of the Lz4 library.
+ */
 export function getLz4VersionString(): Promise<string> {
   return _global.lz4.getLz4VersionString();
 }
 
+/**
+ * Compresses a file using the Lz4 algorithm.
+ * @param sourcePath The path to the file to compress.
+ * @param destinationPath The path to save the compressed file.
+ * @returns A promise that resolves to a FileOperationResult object.
+ */
 export function compressFile(
   sourcePath: string,
   destinationPath: string
@@ -71,6 +95,12 @@ export function compressFile(
   return _global.lz4.compressFile(strippedSourcePath, strippedDestinationPath);
 }
 
+/**
+ * Decompresses a file that was compressed using the Lz4 algorithm.
+ * @param sourcePath The path to the file to decompress.
+ * @param destinationPath The path to save the decompressed file.
+ * @returns A promise that resolves to a FileOperationResult object.
+ */
 export function decompressFile(
   sourcePath: string,
   destinationPath: string

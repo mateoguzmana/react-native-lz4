@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View, Text, Button } from 'react-native';
 import {
   compressFile,
   decompressFile,
   getLz4VersionNumber,
   getLz4VersionString,
-  initializeLz4,
 } from 'react-native-lz4';
 import {
   launchImageLibrary,
@@ -72,10 +71,6 @@ export default function App() {
 
     console.log({ decompressFileResult });
   };
-
-  useEffect(() => {
-    initializeLz4();
-  }, []);
 
   return (
     <View style={styles.container}>
