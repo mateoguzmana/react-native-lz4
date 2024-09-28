@@ -14,32 +14,36 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CHUNK_SIZE (16*1024)
+#define CHUNK_SIZE (16 * 1024)
 
 static size_t get_file_size(char *filename)
 {
     struct stat statbuf;
 
-    if (filename == NULL) {
+    if (filename == NULL)
+    {
         return 0;
     }
 
-    if(stat(filename,&statbuf)) {
+    if (stat(filename, &statbuf))
+    {
         return 0;
     }
 
     return statbuf.st_size;
 }
 
-static int compress_file(FILE* f_in, FILE* f_out)
+static int compress_file(FILE *f_in, FILE *f_out)
 {
-    assert(f_in != NULL); assert(f_out != NULL);
+    assert(f_in != NULL);
+    assert(f_out != NULL);
 
     LZ4F_errorCode_t ret = LZ4F_OK_NoError;
     size_t len;
-    LZ4_writeFile_t* lz4fWrite;
-    void* const buf = malloc(CHUNK_SIZE);
-    if (!buf) {
+    LZ4_writeFile_t *lz4fWrite;
+    void *const buf = malloc(CHUNK_SIZE);
+    if (!buf)
+    {
         printf("error: memory allocation failed \n");
         return 1;
     }
@@ -49,27 +53,32 @@ static int compress_file(FILE* f_in, FILE* f_out)
      * NULL is use default
      */
     ret = LZ4F_writeOpen(&lz4fWrite, f_out, NULL);
-    if (LZ4F_isError(ret)) {
+    if (LZ4F_isError(ret))
+    {
         printf("LZ4F_writeOpen error: %s\n", LZ4F_getErrorName(ret));
         free(buf);
         return 1;
     }
 
-    while (1) {
+    while (1)
+    {
         len = fread(buf, 1, CHUNK_SIZE, f_in);
 
-        if (ferror(f_in)) {
+        if (ferror(f_in))
+        {
             printf("fread error\n");
             goto out;
         }
 
         /* nothing to read */
-        if (len == 0) {
+        if (len == 0)
+        {
             break;
         }
 
         ret = LZ4F_write(lz4fWrite, buf, len);
-        if (LZ4F_isError(ret)) {
+        if (LZ4F_isError(ret))
+        {
             printf("LZ4F_write: %s\n", LZ4F_getErrorName(ret));
             goto out;
         }
@@ -77,7 +86,8 @@ static int compress_file(FILE* f_in, FILE* f_out)
 
 out:
     free(buf);
-    if (LZ4F_isError(LZ4F_writeClose(lz4fWrite))) {
+    if (LZ4F_isError(LZ4F_writeClose(lz4fWrite)))
+    {
         printf("LZ4F_writeClose: %s\n", LZ4F_getErrorName(ret));
         return 1;
     }
@@ -85,37 +95,44 @@ out:
     return 0;
 }
 
-static int decompress_file(FILE* f_in, FILE* f_out)
+static int decompress_file(FILE *f_in, FILE *f_out)
 {
-    assert(f_in != NULL); assert(f_out != NULL);
+    assert(f_in != NULL);
+    assert(f_out != NULL);
 
     LZ4F_errorCode_t ret = LZ4F_OK_NoError;
-    LZ4_readFile_t* lz4fRead;
-    void* const buf= malloc(CHUNK_SIZE);
-    if (!buf) {
+    LZ4_readFile_t *lz4fRead;
+    void *const buf = malloc(CHUNK_SIZE);
+    if (!buf)
+    {
         printf("error: memory allocation failed \n");
     }
 
     ret = LZ4F_readOpen(&lz4fRead, f_in);
-    if (LZ4F_isError(ret)) {
+    if (LZ4F_isError(ret))
+    {
         printf("LZ4F_readOpen error: %s\n", LZ4F_getErrorName(ret));
         free(buf);
         return 1;
     }
 
-    while (1) {
+    while (1)
+    {
         ret = LZ4F_read(lz4fRead, buf, CHUNK_SIZE);
-        if (LZ4F_isError(ret)) {
+        if (LZ4F_isError(ret))
+        {
             printf("LZ4F_read error: %s\n", LZ4F_getErrorName(ret));
             goto out;
         }
 
         /* nothing to read */
-        if (ret == 0) {
+        if (ret == 0)
+        {
             break;
         }
 
-        if(fwrite(buf, 1, ret, f_out) != ret) {
+        if (fwrite(buf, 1, ret, f_out) != ret)
+        {
             printf("write error!\n");
             goto out;
         }
@@ -123,12 +140,14 @@ static int decompress_file(FILE* f_in, FILE* f_out)
 
 out:
     free(buf);
-    if (LZ4F_isError(LZ4F_readClose(lz4fRead))) {
+    if (LZ4F_isError(LZ4F_readClose(lz4fRead)))
+    {
         printf("LZ4F_readClose: %s\n", LZ4F_getErrorName(ret));
         return 1;
     }
 
-    if (ret) {
+    if (ret)
+    {
         return 1;
     }
 
@@ -138,78 +157,79 @@ out:
 // Function to create a directory
 bool createDirectory(const std::string &path)
 {
-	struct stat info;
-	if (stat(path.c_str(), &info) != 0)
-	{
-		// Try to create the directory
-		if (mkdir(path.c_str(), 0777) != 0)
-		{
-			std::cerr << "Error creating directory: " << path << std::endl;
-			std::cerr << "Error code: " << errno << " (" << strerror(errno) << ")" << std::endl;
-			return false;
-		}
-	}
-	return true;
+    struct stat info;
+    if (stat(path.c_str(), &info) != 0)
+    {
+        // Try to create the directory
+        if (mkdir(path.c_str(), 0777) != 0)
+        {
+            std::cerr << "Error creating directory: " << path << std::endl;
+            std::cerr << "Error code: " << errno << " (" << strerror(errno) << ")" << std::endl;
+            return false;
+        }
+    }
+    return true;
 }
 
 namespace lz4
 {
-	int getLz4VersionNumber()
-	{
-		int version = LZ4_versionNumber();
-		return version;
-	}
+    int getLz4VersionNumber()
+    {
+        int version = LZ4_versionNumber();
+        return version;
+    }
 
-	std::string getLz4VersionString()
-	{
-		const char *version = LZ4_versionString();
-		return std::string(version);
-	}
+    std::string getLz4VersionString()
+    {
+        const char *version = LZ4_versionString();
+        return std::string(version);
+    }
 
-	bool compressFile(const std::string &sourcePath, const std::string &destinationPath)
-	{
-		// Get const char* from the strings (for places that expect const char*)
-		const char* sourcePathCStr = sourcePath.c_str();
-		const char* destinationPathCStr = destinationPath.c_str();
+    bool compressFile(const std::string &sourcePath, const std::string &destinationPath)
+    {
+        // Get const char* from the strings (for places that expect const char*)
+        const char *sourcePathCStr = sourcePath.c_str();
+        const char *destinationPathCStr = destinationPath.c_str();
 
-		char* sourcePathMutable = strdup(sourcePathCStr); // Create mutable char* from const char*
-		char* destinationPathMutable = strdup(destinationPathCStr); // Create mutable char* from const char*
+        char *sourcePathMutable = strdup(sourcePathCStr);           // Create mutable char* from const char*
+        char *destinationPathMutable = strdup(destinationPathCStr); // Create mutable char* from const char*
 
-		FILE* const inpFp = fopen(sourcePathCStr, "rb");
-		FILE* const outFp = fopen(destinationPathCStr, "wb");
+        FILE *const inpFp = fopen(sourcePathCStr, "rb");
+        FILE *const outFp = fopen(destinationPathCStr, "wb");
 
-		printf("compress : %s -> %s\n", sourcePathCStr, destinationPathCStr);
+        printf("compress : %s -> %s\n", sourcePathCStr, destinationPathCStr);
 
-		LZ4F_errorCode_t ret = compress_file(inpFp, outFp);
+        LZ4F_errorCode_t ret = compress_file(inpFp, outFp);
 
-		fclose(inpFp);
-		fclose(outFp);
+        fclose(inpFp);
+        fclose(outFp);
 
-		if (ret) {
-			printf("compression error: %s\n", LZ4F_getErrorName(ret));
+        if (ret)
+        {
+            printf("compression error: %s\n", LZ4F_getErrorName(ret));
 
-			return false;
-		}
+            return false;
+        }
 
-		printf("%s: %zu → %zu bytes, %.1f%%\n",
-			sourcePathMutable,
-			get_file_size(sourcePathMutable),
-			get_file_size(destinationPathMutable), /* might overflow is size_t is 32 bits and size_{in,out} > 4 GB */
-			(double)get_file_size(destinationPathMutable) / get_file_size(sourcePathMutable) * 100);
+        printf("%s: %zu → %zu bytes, %.1f%%\n",
+               sourcePathMutable,
+               get_file_size(sourcePathMutable),
+               get_file_size(destinationPathMutable), /* might overflow is size_t is 32 bits and size_{in,out} > 4 GB */
+               (double)get_file_size(destinationPathMutable) / get_file_size(sourcePathMutable) * 100);
 
-		printf("compress : done\n");
-		
-		return true;
-	}
+        printf("compress : done\n");
 
-	bool decompressFile(const std::string &sourcePath, const std::string &destinationPath)
-	{
-		// Get const char* from the strings (for places that expect const char*)
-		const char* sourcePathCStr = sourcePath.c_str();
-		const char* destinationPathCStr = destinationPath.c_str();
+        return true;
+    }
 
-		FILE* const inpFp = fopen(sourcePathCStr, "rb");
-        FILE* const outFp = fopen(destinationPathCStr, "wb");
+    bool decompressFile(const std::string &sourcePath, const std::string &destinationPath)
+    {
+        // Get const char* from the strings (for places that expect const char*)
+        const char *sourcePathCStr = sourcePath.c_str();
+        const char *destinationPathCStr = destinationPath.c_str();
+
+        FILE *const inpFp = fopen(sourcePathCStr, "rb");
+        FILE *const outFp = fopen(destinationPathCStr, "wb");
 
         printf("decompress : %s -> %s\n", sourcePathCStr, destinationPathCStr);
         LZ4F_errorCode_t ret = decompress_file(inpFp, outFp);
@@ -217,13 +237,14 @@ namespace lz4
         fclose(outFp);
         fclose(inpFp);
 
-        if (ret) {
+        if (ret)
+        {
             printf("compression error: %s\n", LZ4F_getErrorName(ret));
             return 1;
         }
 
         printf("decompress : done\n");
 
-		return true;
-	}
+        return true;
+    }
 }

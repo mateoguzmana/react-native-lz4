@@ -27,10 +27,7 @@ export default function App() {
       if (imageLibraryResult.assets && imageLibraryResult.assets.length > 0) {
         const asset = imageLibraryResult.assets[0];
 
-        if (!asset?.uri) {
-          console.log('No asset URI found');
-          return;
-        }
+        if (!asset?.uri) return;
 
         const sourcePath = asset.uri;
         const destinationPath = asset.uri.replace(/(.*)(\..*)/, '$1.lz4');
