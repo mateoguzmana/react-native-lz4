@@ -4,7 +4,10 @@ project(Lz4)
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 14)
 
+file(TO_CMAKE_PATH "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp" libPath)
+
 add_library(react-native-lz4            SHARED
+            ${libPath}
             ../cpp/react-native-lz4.cpp
             ../cpp/lz4.h
             ../cpp/lz4.c
@@ -23,4 +26,9 @@ add_library(react-native-lz4            SHARED
 # Specifies a path to native header files.
 include_directories(
             ../cpp
+            "${NODE_MODULES_DIR}/react-native/React"
+            "${NODE_MODULES_DIR}/react-native/React/Base"
+            "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
 )
+
+target_link_libraries(react-native-lz4)

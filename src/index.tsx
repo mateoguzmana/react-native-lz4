@@ -52,3 +52,13 @@ export function decompressFile(
 
   return Lz4.decompressFile(strippedSourcePath, strippedDestinationPath);
 }
+
+export function initializeLz4(): void {
+  return Lz4.initializeLz4();
+}
+
+const g = global as any;
+
+export function globalGetLz4VersionNumber(): Promise<number> {
+  return g.lz4.getLz4VersionNumber();
+}

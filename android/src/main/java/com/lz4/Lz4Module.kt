@@ -6,6 +6,7 @@ import com.facebook.react.bridge.Promise
 
 class Lz4Module internal constructor(context: ReactApplicationContext) :
   Lz4Spec(context) {
+  private val _context = getReactApplicationContext()
 
   override fun getName(): String {
     return NAME
@@ -31,6 +32,18 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
     promise.resolve(nativeDecompressFile(sourcePath, destinationPath))
   }
 
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  override fun initializeLz4() {
+    val jsContext = getReactApplicationContext().getJavaScriptContextHolder()
+
+    if (jsContext === null || jsContext.get() == 0L) {
+        println("Failed to initialize Lz4: JavaScriptContextHolder is null or zero")
+        return
+      }
+
+    nativeInitializeLz4(jsContext.get())
+  }
+
   companion object {
     const val NAME = "Lz4"
   }
@@ -43,4 +56,5 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
   external fun nativeGetLz4VersionString(): String
   external fun nativeCompressFile(sourcePath: String, destinationPath: String): Boolean
   external fun nativeDecompressFile(sourcePath: String, destinationPath: String): Boolean
+  external fun nativeInitializeLz4(jsiPtr: Long)
 }

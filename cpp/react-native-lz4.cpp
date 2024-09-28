@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+using namespace facebook;
+
 #define CHUNK_SIZE (16 * 1024)
 
 static size_t get_file_size(char *filename)
@@ -246,5 +248,33 @@ namespace lz4
         printf("decompress : done\n");
 
         return true;
+    }
+
+    void initializeLz4(jsi::Runtime &runtime)
+    {
+        // Create a JavaScript object to represent the lz4 module
+        jsi::Object lz4 = jsi::Object(runtime);
+
+        // Add the LZ4 version number function
+        lz4.setProperty(runtime,
+                        "getLz4VersionNumber",
+                        jsi::Function::createFromHostFunction(
+                            runtime,
+                            jsi::PropNameID::forAscii(runtime, "getLz4VersionNumber"),
+                            0, // number of arguments
+                            [](jsi::Runtime &runtime,
+                               const jsi::Value &thisValue,
+                               const jsi::Value *arguments,
+                               size_t count) -> jsi::Value
+                            {
+                                int version = lz4::getLz4VersionNumber();
+                                printf("LZ4 version number: %d\n", version);
+                                return jsi::Value(version); // Return the version number as a JS number
+                            }));
+
+        // Expose the lz4 object globally
+        runtime.global().setProperty(runtime, "lz4", std::move(lz4));
+
+        printf("LZ4 module initialized\n");
     }
 }

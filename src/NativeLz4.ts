@@ -6,6 +6,7 @@ export interface Spec extends TurboModule {
   getLz4VersionString(): Promise<string>;
   compressFile(sourcePath: string, destinationPath: string): Promise<boolean>;
   decompressFile(sourcePath: string, destinationPath: string): Promise<boolean>;
+  initializeLz4(): void;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('Lz4');

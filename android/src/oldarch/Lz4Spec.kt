@@ -11,4 +11,5 @@ abstract class Lz4Spec internal constructor(context: ReactApplicationContext) :
   abstract fun getLz4VersionString(promise: Promise)
   abstract fun compressFile(sourcePath: String, destinationPath: String, promise: Promise)
   abstract fun decompressFile(sourcePath: String, destinationPath: String, promise: Promise)
+  abstract fun initializeLz4()
 }

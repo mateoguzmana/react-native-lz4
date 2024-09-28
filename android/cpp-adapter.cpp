@@ -37,3 +37,9 @@ Java_com_lz4_Lz4Module_nativeDecompressFile(JNIEnv *env, jclass type, jstring so
     env->ReleaseStringUTFChars(destinationPath, destinationPathChars);
     return lz4::decompressFile(sourcePathString, destinationPathString);
 }
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_lz4_Lz4Module_nativeInitializeLz4(JNIEnv *env, jclass clazz, jlong jsiPtr)
+{
+    lz4::initializeLz4(*reinterpret_cast<facebook::jsi::Runtime *>(jsiPtr));
+}

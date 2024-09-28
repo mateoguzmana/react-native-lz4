@@ -5,6 +5,8 @@ import {
   decompressFile,
   getLz4VersionNumber,
   getLz4VersionString,
+  globalGetLz4VersionNumber,
+  initializeLz4,
 } from 'react-native-lz4';
 import {
   launchImageLibrary,
@@ -60,7 +62,13 @@ export default function App() {
     console.log({ decompressFileResult });
   };
 
+  const printGlobalGetLz4VersionNumber = async () => {
+    const globalVersionNumber = await globalGetLz4VersionNumber();
+    console.log({ globalVersionNumber });
+  };
+
   useEffect(() => {
+    initializeLz4();
     getLz4VersionNumber().then(setVersionNumber);
     getLz4VersionString().then(setVersionString);
   }, []);
@@ -74,6 +82,11 @@ export default function App() {
       <Button title="Compress File" onPress={executeCompressFile} />
 
       <Button title="Decompress File" onPress={executeDecompressFile} />
+
+      <Button
+        title="Global Get LZ4 Version Number"
+        onPress={printGlobalGetLz4VersionNumber}
+      />
     </View>
   );
 }
