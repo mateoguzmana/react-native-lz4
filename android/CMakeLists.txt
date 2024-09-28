@@ -30,5 +30,3 @@ include_directories(
             "${NODE_MODULES_DIR}/react-native/React/Base"
             "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
 )
-
-target_link_libraries(react-native-lz4)
