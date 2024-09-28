@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Button } from 'react-native';
 import {
+  compressFile,
+  decompressFile,
   getLz4VersionNumber,
   getLz4VersionString,
-  globalCompressFile,
-  globalDecompressFile,
-  globalGetLz4VersionNumber,
-  globalGetLz4VersionString,
   initializeLz4,
 } from 'react-native-lz4';
 import {
@@ -18,6 +16,18 @@ import { pick } from 'react-native-document-picker';
 export default function App() {
   const [versionNumber, setVersionNumber] = useState<number | undefined>();
   const [versionString, setVersionString] = useState<string | undefined>();
+
+  const executeGetLz4VersionNumber = async () => {
+    const _versionNumber = await getLz4VersionNumber();
+
+    setVersionNumber(_versionNumber);
+  };
+
+  const executeGetLz4VersionString = async () => {
+    const _versionString = await getLz4VersionString();
+
+    setVersionString(_versionString);
+  };
 
   const executeCompressFile = async () => {
     try {
@@ -35,7 +45,7 @@ export default function App() {
         const sourcePath = asset.uri;
         const destinationPath = asset.uri.replace(/(.*)(\..*)/, '$1.lz4');
 
-        const compressFileResult = await globalCompressFile(
+        const compressFileResult = await compressFile(
           sourcePath,
           destinationPath
         );
@@ -55,7 +65,7 @@ export default function App() {
     const sourcePath = file.fileCopyUri;
     const destinationPath = file.fileCopyUri.replace(/(.*)(\..*)/, '$1.lz4');
 
-    const decompressFileResult = await globalDecompressFile(
+    const decompressFileResult = await decompressFile(
       sourcePath,
       destinationPath
     );
@@ -63,20 +73,8 @@ export default function App() {
     console.log({ decompressFileResult });
   };
 
-  const printGlobalGetLz4VersionNumber = async () => {
-    const globalVersionNumber = await globalGetLz4VersionNumber();
-    console.log({ globalVersionNumber });
-  };
-
-  const printGlobalGetLz4VersionString = async () => {
-    const globalVersionString = await globalGetLz4VersionString();
-    console.log({ globalVersionString });
-  };
-
   useEffect(() => {
     initializeLz4();
-    getLz4VersionNumber().then(setVersionNumber);
-    getLz4VersionString().then(setVersionString);
   }, []);
 
   return (
@@ -85,19 +83,19 @@ export default function App() {
 
       <Text>LZ4 Version String: {versionString}</Text>
 
+      <Button
+        title="Get LZ4 Version Number"
+        onPress={executeGetLz4VersionNumber}
+      />
+
+      <Button
+        title="Get LZ4 Version String"
+        onPress={executeGetLz4VersionString}
+      />
+
       <Button title="Compress File" onPress={executeCompressFile} />
 
       <Button title="Decompress File" onPress={executeDecompressFile} />
-
-      <Button
-        title="Global Get LZ4 Version Number"
-        onPress={printGlobalGetLz4VersionNumber}
-      />
-
-      <Button
-        title="Global Get LZ4 Version String"
-        onPress={printGlobalGetLz4VersionString}
-      />
     </View>
   );
 }

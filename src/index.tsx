@@ -25,38 +25,6 @@ const Lz4 = Lz4Module
       }
     );
 
-export function getLz4VersionNumber(): Promise<number> {
-  return Lz4.getLz4VersionNumber();
-}
-
-export function getLz4VersionString(): Promise<string> {
-  return Lz4.getLz4VersionString();
-}
-
-export function compressFile(
-  sourcePath: string,
-  destinationPath: string
-): Promise<boolean> {
-  const strippedSourcePath = formatFilePath(sourcePath);
-  const strippedDestinationPath = formatFilePath(destinationPath);
-
-  return Lz4.compressFile(strippedSourcePath, strippedDestinationPath);
-}
-
-export function decompressFile(
-  sourcePath: string,
-  destinationPath: string
-): Promise<boolean> {
-  const strippedSourcePath = formatFilePath(sourcePath);
-  const strippedDestinationPath = formatFilePath(destinationPath);
-
-  return Lz4.decompressFile(strippedSourcePath, strippedDestinationPath);
-}
-
-export function initializeLz4(): void {
-  return Lz4.initializeLz4();
-}
-
 interface FileOperationResult {
   success: boolean;
   message: string;
@@ -81,15 +49,19 @@ interface Lz4Type {
 
 const _global = global as unknown as Lz4Type;
 
-export function globalGetLz4VersionNumber(): Promise<number> {
+export function initializeLz4(): void {
+  return Lz4.initializeLz4();
+}
+
+export function getLz4VersionNumber(): Promise<number> {
   return _global.lz4.getLz4VersionNumber();
 }
 
-export function globalGetLz4VersionString(): Promise<string> {
+export function getLz4VersionString(): Promise<string> {
   return _global.lz4.getLz4VersionString();
 }
 
-export function globalCompressFile(
+export function compressFile(
   sourcePath: string,
   destinationPath: string
 ): Promise<FileOperationResult> {
@@ -99,7 +71,7 @@ export function globalCompressFile(
   return _global.lz4.compressFile(strippedSourcePath, strippedDestinationPath);
 }
 
-export function globalDecompressFile(
+export function decompressFile(
   sourcePath: string,
   destinationPath: string
 ): Promise<FileOperationResult> {
