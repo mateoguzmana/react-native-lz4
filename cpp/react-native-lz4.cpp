@@ -18,7 +18,16 @@ using namespace facebook;
 
 #define CHUNK_SIZE (16 * 1024)
 
-static size_t get_file_size(char *filename)
+struct FileOperationResult
+{
+    bool success;
+    std::string message;
+    size_t originalSize;
+    size_t finalSize; // Can represent either compressed or decompressed size
+};
+
+static size_t
+get_file_size(char *filename)
 {
     struct stat statbuf;
 
@@ -224,6 +233,44 @@ namespace lz4
         return true;
     }
 
+    FileOperationResult fullCompressFile(const std::string &sourcePath, const std::string &destinationPath)
+    {
+        const char *sourceFilePath = sourcePath.c_str();
+        const char *destinationFilePath = destinationPath.c_str();
+
+        FILE *const inpFp = fopen(sourceFilePath, "rb");
+        if (inpFp == nullptr)
+        {
+            return {false, "Failed to open source file", 0, 0};
+        }
+
+        FILE *const outFp = fopen(destinationFilePath, "wb");
+        if (outFp == nullptr)
+        {
+            fclose(inpFp);
+            return {false, "Failed to open destination file", 0, 0};
+        }
+
+        printf("compress : %s -> %s\n", sourceFilePath, destinationFilePath);
+
+        LZ4F_errorCode_t ret = compress_file(inpFp, outFp);
+
+        fclose(inpFp);
+        fclose(outFp);
+
+        if (ret)
+        {
+            printf("compression error: %s\n", LZ4F_getErrorName(ret));
+
+            return {false, LZ4F_getErrorName(ret), 0, 0};
+        }
+
+        size_t originalSize = get_file_size(const_cast<char *>(sourceFilePath));
+        size_t finalSize = get_file_size(const_cast<char *>(destinationFilePath));
+
+        return {true, "Compression completed", originalSize, finalSize};
+    }
+
     bool decompressFile(const std::string &sourcePath, const std::string &destinationPath)
     {
         // Get const char* from the strings (for places that expect const char*)
@@ -250,12 +297,49 @@ namespace lz4
         return true;
     }
 
+    FileOperationResult fullDecompressFile(const std::string &sourcePath, const std::string &destinationPath)
+    {
+        const char *sourceFilePath = sourcePath.c_str();
+        const char *destinationFilePath = destinationPath.c_str();
+
+        FILE *const inpFp = fopen(sourceFilePath, "rb");
+        if (inpFp == nullptr)
+        {
+            return {false, "Failed to open source file", 0, 0};
+        }
+
+        FILE *const outFp = fopen(destinationFilePath, "wb");
+        if (outFp == nullptr)
+        {
+            fclose(inpFp);
+            return {false, "Failed to open destination file", 0, 0};
+        }
+
+        printf("decompress : %s -> %s\n", sourceFilePath, destinationFilePath);
+
+        LZ4F_errorCode_t ret = decompress_file(inpFp, outFp);
+
+        fclose(inpFp);
+        fclose(outFp);
+
+        if (ret)
+        {
+            printf("decompression error: %s\n", LZ4F_getErrorName(ret));
+
+            return {false, LZ4F_getErrorName(ret), 0, 0};
+        }
+
+        size_t originalSize = get_file_size(const_cast<char *>(sourceFilePath));
+        size_t finalSize = get_file_size(const_cast<char *>(destinationFilePath));
+
+        return {true, "Decompression completed", originalSize, finalSize};
+    }
+
+    // initializer function that exposes the LZ4 functions to JavaScript
     void initializeLz4(jsi::Runtime &runtime)
     {
-        // Create a JavaScript object to represent the lz4 module
         jsi::Object lz4 = jsi::Object(runtime);
 
-        // Add the LZ4 version number function
         lz4.setProperty(runtime,
                         "getLz4VersionNumber",
                         jsi::Function::createFromHostFunction(
@@ -269,10 +353,9 @@ namespace lz4
                             {
                                 int version = lz4::getLz4VersionNumber();
                                 printf("LZ4 version number: %d\n", version);
-                                return jsi::Value(version); // Return the version number as a JS number
+                                return jsi::Value(version);
                             }));
 
-        // Add the LZ4 version string function
         lz4.setProperty(runtime,
                         "getLz4VersionString",
                         jsi::Function::createFromHostFunction(
@@ -286,10 +369,9 @@ namespace lz4
                             {
                                 std::string version = lz4::getLz4VersionString();
                                 printf("LZ4 version string: %s\n", version.c_str());
-                                return jsi::String::createFromUtf8(runtime, version); // Return the version string as a JS string
+                                return jsi::String::createFromUtf8(runtime, version);
                             }));
 
-        // Add the compress file function
         lz4.setProperty(runtime,
                         "compressFile",
                         jsi::Function::createFromHostFunction(
@@ -301,31 +383,52 @@ namespace lz4
                                const jsi::Value *arguments,
                                size_t count) -> jsi::Value
                             {
-                                // Check if the arguments are valid
                                 if (count != 2 || !arguments[0].isString() || !arguments[1].isString())
                                 {
                                     throw jsi::JSError(runtime, "compressFile() requires two string arguments");
                                 }
 
-                                // Get the source and destination paths from the arguments
                                 std::string sourcePath = arguments[0].getString(runtime).utf8(runtime);
                                 std::string destinationPath = arguments[1].getString(runtime).utf8(runtime);
 
-                                // Call the compressFile function
-                                bool success = lz4::compressFile(sourcePath, destinationPath);
+                                FileOperationResult fileOperationResult = lz4::fullCompressFile(sourcePath, destinationPath);
 
-                                // Create a result object
                                 jsi::Object result = jsi::Object(runtime);
+                                result.setProperty(runtime, "success", jsi::Value(fileOperationResult.success));
+                                result.setProperty(runtime, "message", jsi::String::createFromUtf8(runtime, fileOperationResult.message));
+                                result.setProperty(runtime, "originalSize", jsi::Value(static_cast<double>(fileOperationResult.originalSize)));
+                                result.setProperty(runtime, "finalSize", jsi::Value(static_cast<double>(fileOperationResult.finalSize)));
 
-                                // Set properties in the result object
-                                result.setProperty(runtime, "success", jsi::Value(success));
-                                result.setProperty(runtime, "message", jsi::String::createFromAscii(runtime, "Compression completed"));
+                                return result;
+                            }));
 
-                                // For testing purposes, hardcode some values
-                                result.setProperty(runtime, "originalSize", jsi::Value(2500000));  // Assume 2.5MB
-                                result.setProperty(runtime, "compressedSize", jsi::Value(500000)); // Assume 500KB
+        lz4.setProperty(runtime,
+                        "decompressFile",
+                        jsi::Function::createFromHostFunction(
+                            runtime,
+                            jsi::PropNameID::forAscii(runtime, "decompressFile"),
+                            2, // number of arguments
+                            [](jsi::Runtime &runtime,
+                               const jsi::Value &thisValue,
+                               const jsi::Value *arguments,
+                               size_t count) -> jsi::Value
+                            {
+                                if (count != 2 || !arguments[0].isString() || !arguments[1].isString())
+                                {
+                                    throw jsi::JSError(runtime, "decompressFile() requires two string arguments");
+                                }
 
-                                // Return the result object
+                                std::string sourcePath = arguments[0].getString(runtime).utf8(runtime);
+                                std::string destinationPath = arguments[1].getString(runtime).utf8(runtime);
+
+                                FileOperationResult fileOperationResult = lz4::fullDecompressFile(sourcePath, destinationPath);
+
+                                jsi::Object result = jsi::Object(runtime);
+                                result.setProperty(runtime, "success", jsi::Value(fileOperationResult.success));
+                                result.setProperty(runtime, "message", jsi::String::createFromUtf8(runtime, fileOperationResult.message));
+                                result.setProperty(runtime, "originalSize", jsi::Value(static_cast<double>(fileOperationResult.originalSize)));
+                                result.setProperty(runtime, "finalSize", jsi::Value(static_cast<double>(fileOperationResult.finalSize)));
+
                                 return result;
                             }));
 

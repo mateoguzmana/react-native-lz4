@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Button } from 'react-native';
 import {
-  decompressFile,
   getLz4VersionNumber,
   getLz4VersionString,
   globalCompressFile,
+  globalDecompressFile,
   globalGetLz4VersionNumber,
   globalGetLz4VersionString,
   initializeLz4,
@@ -55,7 +55,7 @@ export default function App() {
     const sourcePath = file.fileCopyUri;
     const destinationPath = file.fileCopyUri.replace(/(.*)(\..*)/, '$1.lz4');
 
-    const decompressFileResult = await decompressFile(
+    const decompressFileResult = await globalDecompressFile(
       sourcePath,
       destinationPath
     );

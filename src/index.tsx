@@ -57,6 +57,13 @@ export function initializeLz4(): void {
   return Lz4.initializeLz4();
 }
 
+interface FileOperationResult {
+  success: boolean;
+  message: string;
+  originalSize: number;
+  finalSize: number;
+}
+
 interface Lz4Type {
   lz4: {
     getLz4VersionNumber: () => Promise<number>;
@@ -64,7 +71,11 @@ interface Lz4Type {
     compressFile: (
       sourcePath: string,
       destinationPath: string
-    ) => Promise<boolean>;
+    ) => Promise<FileOperationResult>;
+    decompressFile: (
+      sourcePath: string,
+      destinationPath: string
+    ) => Promise<FileOperationResult>;
   };
 }
 
@@ -81,8 +92,22 @@ export function globalGetLz4VersionString(): Promise<string> {
 export function globalCompressFile(
   sourcePath: string,
   destinationPath: string
-): Promise<boolean> {
+): Promise<FileOperationResult> {
   const strippedSourcePath = formatFilePath(sourcePath);
   const strippedDestinationPath = formatFilePath(destinationPath);
+
   return _global.lz4.compressFile(strippedSourcePath, strippedDestinationPath);
+}
+
+export function globalDecompressFile(
+  sourcePath: string,
+  destinationPath: string
+): Promise<FileOperationResult> {
+  const strippedSourcePath = formatFilePath(sourcePath);
+  const strippedDestinationPath = formatFilePath(destinationPath);
+
+  return _global.lz4.decompressFile(
+    strippedSourcePath,
+    strippedDestinationPath
+  );
 }
