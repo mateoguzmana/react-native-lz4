@@ -6,30 +6,9 @@ import com.facebook.react.bridge.Promise
 
 class Lz4Module internal constructor(context: ReactApplicationContext) :
   Lz4Spec(context) {
-  private val _context = getReactApplicationContext()
 
   override fun getName(): String {
     return NAME
-  }
-
-  @ReactMethod
-  override fun getLz4VersionNumber(promise: Promise) {
-    promise.resolve(nativeGetLz4VersionNumber())
-  }
-
-  @ReactMethod
-  override fun getLz4VersionString(promise: Promise) {
-    promise.resolve(nativeGetLz4VersionString())
-  }
-
-  @ReactMethod
-  override fun compressFile(sourcePath: String, destinationPath: String, promise: Promise) {
-    promise.resolve(nativeCompressFile(sourcePath, destinationPath))
-  }
-
-  @ReactMethod
-  override fun decompressFile(sourcePath: String, destinationPath: String, promise: Promise) {
-    promise.resolve(nativeDecompressFile(sourcePath, destinationPath))
   }
 
   @ReactMethod(isBlockingSynchronousMethod = true)
@@ -52,9 +31,5 @@ class Lz4Module internal constructor(context: ReactApplicationContext) :
     System.loadLibrary("react-native-lz4")
   }
 
-  external fun nativeGetLz4VersionNumber(): Int
-  external fun nativeGetLz4VersionString(): String
-  external fun nativeCompressFile(sourcePath: String, destinationPath: String): Boolean
-  external fun nativeDecompressFile(sourcePath: String, destinationPath: String): Boolean
   external fun nativeInitializeLz4(jsiPtr: Long)
 }

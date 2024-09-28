@@ -9,44 +9,6 @@ RCT_EXPORT_MODULE(Lz4)
 @synthesize bridge = _bridge;
 @synthesize methodQueue = _methodQueue;
 
-RCT_EXPORT_METHOD(getLz4VersionNumber:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject)
-{
-    NSNumber *result = @(lz4::getLz4VersionNumber());
-
-    resolve(result);
-}
-
-RCT_EXPORT_METHOD(getLz4VersionString:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject)
-{
-    std::string versionString = lz4::getLz4VersionString();
-    NSString *result = [NSString stringWithUTF8String:versionString.c_str()];
-
-    resolve(result);
-}
-
-RCT_EXPORT_METHOD(compressFile:(NSString *)sourcePath
-                  destinationPath:(NSString *)destinationPath
-                  resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject)
-{
-    bool result = lz4::compressFile(sourcePath.UTF8String, destinationPath.UTF8String);
-
-    resolve(@(result));
-}
-
-RCT_EXPORT_METHOD(decompressFile:(NSString *)sourcePath
-                  destinationPath:(NSString *)destinationPath
-                  resolve:(RCTPromiseResolveBlock)resolve
-                  reject:(RCTPromiseRejectBlock)reject)
-{
-    bool result = lz4::decompressFile(sourcePath.UTF8String, destinationPath.UTF8String);
-
-    resolve(@(result));
-}
-
-
 RCT_EXPORT_METHOD(initializeLz4)
 {
   RCTBridge *bridge = [RCTBridge currentBridge];

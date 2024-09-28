@@ -196,44 +196,7 @@ namespace lz4
         return std::string(version);
     }
 
-    bool compressFile(const std::string &sourcePath, const std::string &destinationPath)
-    {
-        // Get const char* from the strings (for places that expect const char*)
-        const char *sourcePathCStr = sourcePath.c_str();
-        const char *destinationPathCStr = destinationPath.c_str();
-
-        char *sourcePathMutable = strdup(sourcePathCStr);           // Create mutable char* from const char*
-        char *destinationPathMutable = strdup(destinationPathCStr); // Create mutable char* from const char*
-
-        FILE *const inpFp = fopen(sourcePathCStr, "rb");
-        FILE *const outFp = fopen(destinationPathCStr, "wb");
-
-        printf("compress : %s -> %s\n", sourcePathCStr, destinationPathCStr);
-
-        LZ4F_errorCode_t ret = compress_file(inpFp, outFp);
-
-        fclose(inpFp);
-        fclose(outFp);
-
-        if (ret)
-        {
-            printf("compression error: %s\n", LZ4F_getErrorName(ret));
-
-            return false;
-        }
-
-        printf("%s: %zu → %zu bytes, %.1f%%\n",
-               sourcePathMutable,
-               get_file_size(sourcePathMutable),
-               get_file_size(destinationPathMutable), /* might overflow is size_t is 32 bits and size_{in,out} > 4 GB */
-               (double)get_file_size(destinationPathMutable) / get_file_size(sourcePathMutable) * 100);
-
-        printf("compress : done\n");
-
-        return true;
-    }
-
-    FileOperationResult fullCompressFile(const std::string &sourcePath, const std::string &destinationPath)
+    FileOperationResult compressFile(const std::string &sourcePath, const std::string &destinationPath)
     {
         const char *sourceFilePath = sourcePath.c_str();
         const char *destinationFilePath = destinationPath.c_str();
@@ -271,33 +234,7 @@ namespace lz4
         return {true, "Compression completed", originalSize, finalSize};
     }
 
-    bool decompressFile(const std::string &sourcePath, const std::string &destinationPath)
-    {
-        // Get const char* from the strings (for places that expect const char*)
-        const char *sourcePathCStr = sourcePath.c_str();
-        const char *destinationPathCStr = destinationPath.c_str();
-
-        FILE *const inpFp = fopen(sourcePathCStr, "rb");
-        FILE *const outFp = fopen(destinationPathCStr, "wb");
-
-        printf("decompress : %s -> %s\n", sourcePathCStr, destinationPathCStr);
-        LZ4F_errorCode_t ret = decompress_file(inpFp, outFp);
-
-        fclose(outFp);
-        fclose(inpFp);
-
-        if (ret)
-        {
-            printf("compression error: %s\n", LZ4F_getErrorName(ret));
-            return 1;
-        }
-
-        printf("decompress : done\n");
-
-        return true;
-    }
-
-    FileOperationResult fullDecompressFile(const std::string &sourcePath, const std::string &destinationPath)
+    FileOperationResult decompressFile(const std::string &sourcePath, const std::string &destinationPath)
     {
         const char *sourceFilePath = sourcePath.c_str();
         const char *destinationFilePath = destinationPath.c_str();
@@ -391,7 +328,7 @@ namespace lz4
                                 std::string sourcePath = arguments[0].getString(runtime).utf8(runtime);
                                 std::string destinationPath = arguments[1].getString(runtime).utf8(runtime);
 
-                                FileOperationResult fileOperationResult = lz4::fullCompressFile(sourcePath, destinationPath);
+                                FileOperationResult fileOperationResult = lz4::compressFile(sourcePath, destinationPath);
 
                                 jsi::Object result = jsi::Object(runtime);
                                 result.setProperty(runtime, "success", jsi::Value(fileOperationResult.success));
@@ -421,7 +358,7 @@ namespace lz4
                                 std::string sourcePath = arguments[0].getString(runtime).utf8(runtime);
                                 std::string destinationPath = arguments[1].getString(runtime).utf8(runtime);
 
-                                FileOperationResult fileOperationResult = lz4::fullDecompressFile(sourcePath, destinationPath);
+                                FileOperationResult fileOperationResult = lz4::decompressFile(sourcePath, destinationPath);
 
                                 jsi::Object result = jsi::Object(runtime);
                                 result.setProperty(runtime, "success", jsi::Value(fileOperationResult.success));
