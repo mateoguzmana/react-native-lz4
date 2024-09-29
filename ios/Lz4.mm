@@ -9,7 +9,11 @@ RCT_EXPORT_MODULE(Lz4)
 @synthesize bridge = _bridge;
 @synthesize methodQueue = _methodQueue;
 
-RCT_EXPORT_METHOD(initializeLz4)
++ (BOOL)requiresMainQueueSetup {
+  return YES;
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(initializeLz4)
 {
   RCTBridge *bridge = [RCTBridge currentBridge];
   RCTCxxBridge *cxxBridge = (RCTCxxBridge *) bridge;
@@ -22,6 +26,8 @@ RCT_EXPORT_METHOD(initializeLz4)
   }
 
   lz4::initializeLz4(*(jsi::Runtime *)cxxBridge.runtime);
+
+  return @true;
 }
 
 // Don't compile this code when we build for the old architecture.

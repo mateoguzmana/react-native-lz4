@@ -19,6 +19,8 @@ export default function App() {
   const executeGetLz4VersionNumber = async () => {
     const _versionNumber = await getLz4VersionNumber();
 
+    console.log({ _versionNumber });
+
     setVersionNumber(_versionNumber);
   };
 
