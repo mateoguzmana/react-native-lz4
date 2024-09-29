@@ -7,7 +7,6 @@ using namespace facebook;
 RCT_EXPORT_MODULE(Lz4)
 
 @synthesize bridge = _bridge;
-@synthesize methodQueue = _methodQueue;
 
 + (BOOL)requiresMainQueueSetup {
   return YES;
