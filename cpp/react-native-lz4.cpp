@@ -182,6 +182,18 @@ bool createDirectory(const std::string &path)
     return true;
 }
 
+// Helper function to create a jsi::Object from FileOperationResult
+jsi::Object createJsResultObject(jsi::Runtime &runtime, const FileOperationResult &fileOperationResult)
+{
+    jsi::Object result = jsi::Object(runtime);
+    result.setProperty(runtime, "success", jsi::Value(fileOperationResult.success));
+    result.setProperty(runtime, "message", jsi::String::createFromUtf8(runtime, fileOperationResult.message));
+    result.setProperty(runtime, "originalSize", jsi::Value(static_cast<double>(fileOperationResult.originalSize)));
+    result.setProperty(runtime, "finalSize", jsi::Value(static_cast<double>(fileOperationResult.finalSize)));
+
+    return result;
+}
+
 namespace lz4
 {
     int getLz4VersionNumber()
@@ -309,13 +321,7 @@ namespace lz4
 
                                 FileOperationResult fileOperationResult = lz4::compressFile(sourcePath, destinationPath);
 
-                                jsi::Object result = jsi::Object(runtime);
-                                result.setProperty(runtime, "success", jsi::Value(fileOperationResult.success));
-                                result.setProperty(runtime, "message", jsi::String::createFromUtf8(runtime, fileOperationResult.message));
-                                result.setProperty(runtime, "originalSize", jsi::Value(static_cast<double>(fileOperationResult.originalSize)));
-                                result.setProperty(runtime, "finalSize", jsi::Value(static_cast<double>(fileOperationResult.finalSize)));
-
-                                return result;
+                                return createJsResultObject(runtime, fileOperationResult);
                             }));
 
         lz4.setProperty(runtime,
@@ -339,13 +345,7 @@ namespace lz4
 
                                 FileOperationResult fileOperationResult = lz4::decompressFile(sourcePath, destinationPath);
 
-                                jsi::Object result = jsi::Object(runtime);
-                                result.setProperty(runtime, "success", jsi::Value(fileOperationResult.success));
-                                result.setProperty(runtime, "message", jsi::String::createFromUtf8(runtime, fileOperationResult.message));
-                                result.setProperty(runtime, "originalSize", jsi::Value(static_cast<double>(fileOperationResult.originalSize)));
-                                result.setProperty(runtime, "finalSize", jsi::Value(static_cast<double>(fileOperationResult.finalSize)));
-
-                                return result;
+                                return createJsResultObject(runtime, fileOperationResult);
                             }));
 
         // Expose the lz4 object globally
