@@ -196,80 +196,61 @@ namespace lz4
         return std::string(version);
     }
 
-    FileOperationResult compressFile(const std::string &sourcePath, const std::string &destinationPath)
+    FileOperationResult performFileOperation(
+        const std::string &sourcePath,
+        const std::string &destinationPath,
+        const std::function<LZ4F_errorCode_t(FILE *, FILE *)> &operation)
     {
         const char *sourceFilePath = sourcePath.c_str();
         const char *destinationFilePath = destinationPath.c_str();
 
-        FILE *const inpFp = fopen(sourceFilePath, "rb");
-        if (inpFp == nullptr)
+        FILE *inpFp = fopen(sourceFilePath, "rb");
+        if (!inpFp)
         {
             return {false, "Failed to open source file", 0, 0};
         }
 
-        FILE *const outFp = fopen(destinationFilePath, "wb");
-        if (outFp == nullptr)
+        FILE *outFp = fopen(destinationFilePath, "wb");
+        if (!outFp)
         {
             fclose(inpFp);
             return {false, "Failed to open destination file", 0, 0};
         }
 
-        printf("compress : %s -> %s\n", sourceFilePath, destinationFilePath);
-
-        LZ4F_errorCode_t ret = compress_file(inpFp, outFp);
+        LZ4F_errorCode_t ret = operation(inpFp, outFp);
 
         fclose(inpFp);
         fclose(outFp);
 
-        if (ret)
+        if (ret != 0)
         {
-            printf("compression error: %s\n", LZ4F_getErrorName(ret));
-
             return {false, LZ4F_getErrorName(ret), 0, 0};
         }
 
         size_t originalSize = get_file_size(const_cast<char *>(sourceFilePath));
         size_t finalSize = get_file_size(const_cast<char *>(destinationFilePath));
 
-        return {true, "Compression completed", originalSize, finalSize};
+        return {true, "Operation completed", originalSize, finalSize};
+    }
+
+    FileOperationResult compressFile(const std::string &sourcePath, const std::string &destinationPath)
+    {
+        return performFileOperation(
+            sourcePath, destinationPath,
+            [](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
+            {
+                return compress_file(f_in, f_out);
+            });
     }
 
     FileOperationResult decompressFile(const std::string &sourcePath, const std::string &destinationPath)
     {
-        const char *sourceFilePath = sourcePath.c_str();
-        const char *destinationFilePath = destinationPath.c_str();
-
-        FILE *const inpFp = fopen(sourceFilePath, "rb");
-        if (inpFp == nullptr)
-        {
-            return {false, "Failed to open source file", 0, 0};
-        }
-
-        FILE *const outFp = fopen(destinationFilePath, "wb");
-        if (outFp == nullptr)
-        {
-            fclose(inpFp);
-            return {false, "Failed to open destination file", 0, 0};
-        }
-
-        printf("decompress : %s -> %s\n", sourceFilePath, destinationFilePath);
-
-        LZ4F_errorCode_t ret = decompress_file(inpFp, outFp);
-
-        fclose(inpFp);
-        fclose(outFp);
-
-        if (ret)
-        {
-            printf("decompression error: %s\n", LZ4F_getErrorName(ret));
-
-            return {false, LZ4F_getErrorName(ret), 0, 0};
-        }
-
-        size_t originalSize = get_file_size(const_cast<char *>(sourceFilePath));
-        size_t finalSize = get_file_size(const_cast<char *>(destinationFilePath));
-
-        return {true, "Decompression completed", originalSize, finalSize};
+        return performFileOperation(
+            sourcePath, destinationPath,
+            [](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
+            {
+                return decompress_file(f_in, f_out);
+            });
     }
 
     // initializer function that exposes the LZ4 functions to JavaScript
@@ -289,7 +270,6 @@ namespace lz4
                                size_t count) -> jsi::Value
                             {
                                 int version = lz4::getLz4VersionNumber();
-                                printf("LZ4 version number: %d\n", version);
                                 return jsi::Value(version);
                             }));
 
@@ -305,7 +285,6 @@ namespace lz4
                                size_t count) -> jsi::Value
                             {
                                 std::string version = lz4::getLz4VersionString();
-                                printf("LZ4 version string: %s\n", version.c_str());
                                 return jsi::String::createFromUtf8(runtime, version);
                             }));
 
