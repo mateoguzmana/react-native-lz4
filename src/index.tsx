@@ -28,7 +28,7 @@ const Lz4 = Lz4Module
 /**
  * Represents the result of a file operation.
  */
-interface FileOperationResult {
+export interface FileOperationResult {
   /**
    * Indicates whether the operation was successful.
    */

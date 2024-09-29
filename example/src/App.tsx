@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { StyleSheet, View, Text, Button } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import {
   compressFile,
   decompressFile,
   getLz4VersionNumber,
   getLz4VersionString,
+  type FileOperationResult,
 } from 'react-native-lz4';
 import {
   launchImageLibrary,
@@ -12,9 +13,17 @@ import {
 } from 'react-native-image-picker';
 import { pick } from 'react-native-document-picker';
 
+interface FileOperationResultExtended extends FileOperationResult {
+  sourcePath: string;
+  destinationPath: string;
+  operation: 'compress' | 'decompress';
+}
+
 export default function App() {
   const [versionNumber, setVersionNumber] = useState<number | undefined>();
   const [versionString, setVersionString] = useState<string | undefined>();
+  const [fileOperationResult, setFileOperationResult] =
+    useState<FileOperationResultExtended>();
 
   const executeGetLz4VersionNumber = async () => {
     const _versionNumber = await getLz4VersionNumber();
@@ -30,7 +39,7 @@ export default function App() {
     setVersionString(_versionString);
   };
 
-  const executeCompressFile = async () => {
+  const executeCompressFileUsingImageLibrary = async () => {
     try {
       const options: ImageLibraryOptions = {
         mediaType: 'photo',
@@ -51,11 +60,37 @@ export default function App() {
           destinationPath
         );
 
-        console.log({ compressFileResult });
+        setFileOperationResult({
+          ...compressFileResult,
+          sourcePath,
+          destinationPath,
+          operation: 'compress',
+        });
       }
     } catch (error) {
       console.log({ error });
     }
+  };
+
+  const executeCompressFileUsingDocumentPicker = async () => {
+    const [file] = await pick({ copyTo: 'cachesDirectory' });
+
+    if (!file || !file.fileCopyUri) return;
+
+    const sourcePath = file.fileCopyUri;
+    const destinationPath = file.fileCopyUri.replace(/(.*)(\..*)/, '$1.lz4');
+
+    const decompressFileResult = await compressFile(
+      sourcePath,
+      destinationPath
+    );
+
+    setFileOperationResult({
+      ...decompressFileResult,
+      sourcePath,
+      destinationPath,
+      operation: 'compress',
+    });
   };
 
   const executeDecompressFile = async () => {
@@ -71,41 +106,102 @@ export default function App() {
       destinationPath
     );
 
-    console.log({ decompressFileResult });
+    setFileOperationResult({
+      ...decompressFileResult,
+      sourcePath,
+      destinationPath,
+      operation: 'decompress',
+    });
   };
 
   return (
     <View style={styles.container}>
-      <Text>LZ4 Version Number: {versionNumber}</Text>
+      {versionNumber && (
+        <Text style={styles.label}>LZ4 Version Number: {versionNumber}</Text>
+      )}
 
-      <Text>LZ4 Version String: {versionString}</Text>
+      {versionString && (
+        <Text style={styles.label}>LZ4 Version String: {versionString}</Text>
+      )}
 
-      <Button
-        title="Get LZ4 Version Number"
+      {fileOperationResult && (
+        <View style={styles.subContainer}>
+          {Object.entries(fileOperationResult).map(([key, value]) => (
+            <Text key={key} style={styles.label}>
+              {key}: {value.toString()}
+            </Text>
+          ))}
+        </View>
+      )}
+
+      <View style={styles.separator} />
+
+      <OptionButton
+        title="> Get LZ4 Version Number"
         onPress={executeGetLz4VersionNumber}
       />
 
-      <Button
-        title="Get LZ4 Version String"
+      <OptionButton
+        title="> Get LZ4 Version String"
         onPress={executeGetLz4VersionString}
       />
 
-      <Button title="Compress File" onPress={executeCompressFile} />
+      <OptionButton
+        title="> Compress File Using Image Library"
+        onPress={executeCompressFileUsingImageLibrary}
+      />
 
-      <Button title="Decompress File" onPress={executeDecompressFile} />
+      <OptionButton
+        title="> Compress File Using Document Picker"
+        onPress={executeCompressFileUsingDocumentPicker}
+      />
+
+      <OptionButton title="> Decompress File" onPress={executeDecompressFile} />
     </View>
+  );
+}
+
+interface ButtonProps {
+  title: string;
+  onPress(): void;
+}
+
+function OptionButton({ title, onPress }: ButtonProps) {
+  return (
+    <TouchableOpacity onPress={onPress} style={styles.button}>
+      <Text style={styles.buttonText}>{title}</Text>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f0f0f0',
+    color: '#333',
+  },
+  subContainer: {
     justifyContent: 'center',
   },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
+  label: {
+    fontSize: 12,
+    color: '#333',
+    padding: 10,
+  },
+  button: {
+    backgroundColor: 'transparent',
+    color: '#2196F3',
+    margin: 4,
+  },
+  buttonText: {
+    color: '#2196F3',
+    padding: 10,
+  },
+  separator: {
+    marginVertical: 10,
+    height: 1,
+    width: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
   },
 });
