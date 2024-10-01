@@ -44,7 +44,26 @@ get_file_size(char *filename)
     return statbuf.st_size;
 }
 
-static int compress_file(FILE *f_in, FILE *f_out)
+// @TODO: get_file_size and get_file_size_by_file are the same with different input types. Combine them.
+static size_t get_file_size_by_file(FILE *file)
+{
+    if (file == nullptr)
+    {
+        return 0;
+    }
+
+    struct stat statbuf;
+    int fd = fileno(file); // Get the file descriptor
+
+    if (fstat(fd, &statbuf) != 0)
+    {
+        return 0; // Return 0 if the file size cannot be determined
+    }
+
+    return statbuf.st_size;
+}
+
+static int compress_file(FILE *f_in, FILE *f_out, std::function<void(size_t, size_t)> progressCallback)
 {
     assert(f_in != NULL);
     assert(f_out != NULL);
@@ -58,6 +77,9 @@ static int compress_file(FILE *f_in, FILE *f_out)
         printf("error: memory allocation failed \n");
         return 1;
     }
+
+    size_t totalSize = get_file_size_by_file(f_in);
+    size_t processedSize = 0;
 
     /* Of course, you can also use prefsPtr to
      * set the parameters of the compressed file
@@ -93,6 +115,12 @@ static int compress_file(FILE *f_in, FILE *f_out)
             printf("LZ4F_write: %s\n", LZ4F_getErrorName(ret));
             goto out;
         }
+
+        processedSize += len;
+        if (progressCallback)
+        {
+            progressCallback(processedSize, totalSize);
+        }
     }
 
 out:
@@ -106,7 +134,7 @@ out:
     return 0;
 }
 
-static int decompress_file(FILE *f_in, FILE *f_out)
+static int decompress_file(FILE *f_in, FILE *f_out, std::function<void(size_t, size_t)> progressCallback)
 {
     assert(f_in != NULL);
     assert(f_out != NULL);
@@ -118,6 +146,9 @@ static int decompress_file(FILE *f_in, FILE *f_out)
     {
         printf("error: memory allocation failed \n");
     }
+
+    size_t totalSize = get_file_size_by_file(f_in);
+    size_t processedSize = 0;
 
     ret = LZ4F_readOpen(&lz4fRead, f_in);
     if (LZ4F_isError(ret))
@@ -146,6 +177,12 @@ static int decompress_file(FILE *f_in, FILE *f_out)
         {
             printf("write error!\n");
             goto out;
+        }
+
+        processedSize += ret;
+        if (progressCallback)
+        {
+            progressCallback(processedSize, totalSize);
         }
     }
 
@@ -192,6 +229,24 @@ jsi::Object createJsResultObject(jsi::Runtime &runtime, const FileOperationResul
     result.setProperty(runtime, "finalSize", jsi::Value(static_cast<double>(fileOperationResult.finalSize)));
 
     return result;
+}
+
+std::function<void(size_t, size_t)> createProgressCallback(jsi::Runtime &runtime, const jsi::Value *arguments, size_t count)
+{
+    if (count >= 3 && arguments[2].isObject() && arguments[2].asObject(runtime).isFunction(runtime))
+    {
+        auto jsCallback = std::make_shared<jsi::Function>(arguments[2].asObject(runtime).asFunction(runtime));
+
+        return [jsCallback, &runtime](size_t processedSize, size_t totalSize)
+        {
+            jsi::Value arg1 = jsi::Value(static_cast<double>(processedSize));
+            jsi::Value arg2 = jsi::Value(static_cast<double>(totalSize));
+
+            jsCallback->call(runtime, arg1, arg2); // Call the JavaScript callback with processedSize and totalSize
+        };
+    }
+
+    return nullptr; // Return nullptr if no valid callback is provided
 }
 
 namespace lz4
@@ -245,23 +300,23 @@ namespace lz4
         return {true, "Operation completed", originalSize, finalSize};
     }
 
-    FileOperationResult compressFile(const std::string &sourcePath, const std::string &destinationPath)
+    FileOperationResult compressFile(const std::string &sourcePath, const std::string &destinationPath, std::function<void(size_t, size_t)> progressCallback = nullptr)
     {
         return performFileOperation(
             sourcePath, destinationPath,
-            [](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
+            [progressCallback](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
             {
-                return compress_file(f_in, f_out);
+                return compress_file(f_in, f_out, progressCallback);
             });
     }
 
-    FileOperationResult decompressFile(const std::string &sourcePath, const std::string &destinationPath)
+    FileOperationResult decompressFile(const std::string &sourcePath, const std::string &destinationPath, std::function<void(size_t, size_t)> progressCallback = nullptr)
     {
         return performFileOperation(
             sourcePath, destinationPath,
-            [](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
+            [progressCallback](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
             {
-                return decompress_file(f_in, f_out);
+                return decompress_file(f_in, f_out, progressCallback);
             });
     }
 
@@ -311,15 +366,16 @@ namespace lz4
                                const jsi::Value *arguments,
                                size_t count) -> jsi::Value
                             {
-                                if (count != 2 || !arguments[0].isString() || !arguments[1].isString())
+                                if (count < 2 || !arguments[0].isString() || !arguments[1].isString())
                                 {
                                     throw jsi::JSError(runtime, "compressFile() requires two string arguments");
                                 }
 
                                 std::string sourcePath = arguments[0].getString(runtime).utf8(runtime);
                                 std::string destinationPath = arguments[1].getString(runtime).utf8(runtime);
+                                std::function<void(size_t, size_t)> progressCallback = createProgressCallback(runtime, arguments, count);
 
-                                FileOperationResult fileOperationResult = lz4::compressFile(sourcePath, destinationPath);
+                                FileOperationResult fileOperationResult = lz4::compressFile(sourcePath, destinationPath, progressCallback);
 
                                 return createJsResultObject(runtime, fileOperationResult);
                             }));
@@ -335,15 +391,16 @@ namespace lz4
                                const jsi::Value *arguments,
                                size_t count) -> jsi::Value
                             {
-                                if (count != 2 || !arguments[0].isString() || !arguments[1].isString())
+                                if (count < 2 || !arguments[0].isString() || !arguments[1].isString())
                                 {
                                     throw jsi::JSError(runtime, "decompressFile() requires two string arguments");
                                 }
 
                                 std::string sourcePath = arguments[0].getString(runtime).utf8(runtime);
                                 std::string destinationPath = arguments[1].getString(runtime).utf8(runtime);
+                                std::function<void(size_t, size_t)> progressCallback = createProgressCallback(runtime, arguments, count);
 
-                                FileOperationResult fileOperationResult = lz4::decompressFile(sourcePath, destinationPath);
+                                FileOperationResult fileOperationResult = lz4::decompressFile(sourcePath, destinationPath, progressCallback);
 
                                 return createJsResultObject(runtime, fileOperationResult);
                             }));

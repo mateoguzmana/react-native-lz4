@@ -19,6 +19,19 @@ interface FileOperationResultExtended extends FileOperationResult {
   operation: 'compress' | 'decompress';
 }
 
+/**
+ * Example of a callback function that is called with the progress of the operation.
+ * @param processedSize
+ * @param totalSize
+ */
+function onProgress(processedSize: number, totalSize: number) {
+  console.log({
+    processedSize,
+    totalSize,
+    progress: `${Math.round((processedSize / totalSize) * 100)}%`,
+  });
+}
+
 export default function App() {
   const [versionNumber, setVersionNumber] = useState<number | undefined>();
   const [versionString, setVersionString] = useState<string | undefined>();
@@ -57,7 +70,8 @@ export default function App() {
 
         const compressFileResult = await compressFile(
           sourcePath,
-          destinationPath
+          destinationPath,
+          onProgress
         );
 
         setFileOperationResult({
@@ -82,7 +96,8 @@ export default function App() {
 
     const decompressFileResult = await compressFile(
       sourcePath,
-      destinationPath
+      destinationPath,
+      onProgress
     );
 
     setFileOperationResult({
@@ -103,7 +118,8 @@ export default function App() {
 
     const decompressFileResult = await decompressFile(
       sourcePath,
-      destinationPath
+      destinationPath,
+      onProgress
     );
 
     setFileOperationResult({

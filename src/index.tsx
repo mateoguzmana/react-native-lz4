@@ -53,11 +53,13 @@ interface Lz4Type {
     getLz4VersionString: () => Promise<string>;
     compressFile: (
       sourcePath: string,
-      destinationPath: string
+      destinationPath: string,
+      onProgress?: (processedSize: number, totalSize: number) => void
     ) => Promise<FileOperationResult>;
     decompressFile: (
       sourcePath: string,
-      destinationPath: string
+      destinationPath: string,
+      onProgress?: (processedSize: number, totalSize: number) => void
     ) => Promise<FileOperationResult>;
   };
 }
@@ -98,33 +100,42 @@ export function getLz4VersionString(): Promise<string> {
  * Compresses a file using the Lz4 algorithm.
  * @param sourcePath The path to the file to compress.
  * @param destinationPath The path to save the compressed file.
+ * @param onProgress A callback function that is called with the progress of the operation.
  * @returns A promise that resolves to a FileOperationResult object.
  */
 export function compressFile(
   sourcePath: string,
-  destinationPath: string
+  destinationPath: string,
+  onProgress?: (processedSize: number, totalSize: number) => void
 ): Promise<FileOperationResult> {
   const strippedSourcePath = formatFilePath(sourcePath);
   const strippedDestinationPath = formatFilePath(destinationPath);
 
-  return _global.lz4.compressFile(strippedSourcePath, strippedDestinationPath);
+  return _global.lz4.compressFile(
+    strippedSourcePath,
+    strippedDestinationPath,
+    onProgress
+  );
 }
 
 /**
  * Decompresses a file that was compressed using the Lz4 algorithm.
  * @param sourcePath The path to the file to decompress.
  * @param destinationPath The path to save the decompressed file.
+ * @param onProgress A callback function that is called with the progress of the operation.
  * @returns A promise that resolves to a FileOperationResult object.
  */
 export function decompressFile(
   sourcePath: string,
-  destinationPath: string
+  destinationPath: string,
+  onProgress?: (processedSize: number, totalSize: number) => void
 ): Promise<FileOperationResult> {
   const strippedSourcePath = formatFilePath(sourcePath);
   const strippedDestinationPath = formatFilePath(destinationPath);
 
   return _global.lz4.decompressFile(
     strippedSourcePath,
-    strippedDestinationPath
+    strippedDestinationPath,
+    onProgress
   );
 }
