@@ -47,16 +47,14 @@ export interface FileOperationResult {
   finalSize: number;
 }
 
+type FileOperationMode = 'compress' | 'decompress';
+
 interface Lz4Type {
   lz4: {
     getLz4VersionNumber: () => Promise<number>;
     getLz4VersionString: () => Promise<string>;
-    compressFile: (
-      sourcePath: string,
-      destinationPath: string,
-      onProgress?: (processedSize: number, totalSize: number) => void
-    ) => Promise<FileOperationResult>;
-    decompressFile: (
+    performFileOperation: (
+      mode: FileOperationMode,
       sourcePath: string,
       destinationPath: string,
       onProgress?: (processedSize: number, totalSize: number) => void
@@ -111,7 +109,8 @@ export function compressFile(
   const strippedSourcePath = formatFilePath(sourcePath);
   const strippedDestinationPath = formatFilePath(destinationPath);
 
-  return _global.lz4.compressFile(
+  return _global.lz4.performFileOperation(
+    'compress',
     strippedSourcePath,
     strippedDestinationPath,
     onProgress
@@ -133,7 +132,8 @@ export function decompressFile(
   const strippedSourcePath = formatFilePath(sourcePath);
   const strippedDestinationPath = formatFilePath(destinationPath);
 
-  return _global.lz4.decompressFile(
+  return _global.lz4.performFileOperation(
+    'decompress',
     strippedSourcePath,
     strippedDestinationPath,
     onProgress

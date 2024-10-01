@@ -68,18 +68,22 @@ export default function App() {
         const sourcePath = asset.uri;
         const destinationPath = asset.uri.replace(/(.*)(\..*)/, '$1.lz4');
 
-        const compressFileResult = await compressFile(
-          sourcePath,
-          destinationPath,
-          onProgress
-        );
+        try {
+          const compressFileResult = await compressFile(
+            sourcePath,
+            destinationPath,
+            onProgress
+          );
 
-        setFileOperationResult({
-          ...compressFileResult,
-          sourcePath,
-          destinationPath,
-          operation: 'compress',
-        });
+          setFileOperationResult({
+            ...compressFileResult,
+            sourcePath,
+            destinationPath,
+            operation: 'compress',
+          });
+        } catch (error) {
+          console.log({ error });
+        }
       }
     } catch (error) {
       console.log({ error });
@@ -94,18 +98,22 @@ export default function App() {
     const sourcePath = file.fileCopyUri;
     const destinationPath = file.fileCopyUri.replace(/(.*)(\..*)/, '$1.lz4');
 
-    const decompressFileResult = await compressFile(
-      sourcePath,
-      destinationPath,
-      onProgress
-    );
+    try {
+      const decompressFileResult = await compressFile(
+        sourcePath,
+        destinationPath,
+        onProgress
+      );
 
-    setFileOperationResult({
-      ...decompressFileResult,
-      sourcePath,
-      destinationPath,
-      operation: 'compress',
-    });
+      setFileOperationResult({
+        ...decompressFileResult,
+        sourcePath,
+        destinationPath,
+        operation: 'compress',
+      });
+    } catch (error) {
+      console.log({ error });
+    }
   };
 
   const executeDecompressFile = async () => {
@@ -116,18 +124,22 @@ export default function App() {
     const sourcePath = file.fileCopyUri;
     const destinationPath = file.fileCopyUri.replace(/(.*)(\..*)/, '$1.lz4');
 
-    const decompressFileResult = await decompressFile(
-      sourcePath,
-      destinationPath,
-      onProgress
-    );
+    try {
+      const decompressFileResult = await decompressFile(
+        sourcePath,
+        destinationPath,
+        onProgress
+      );
 
-    setFileOperationResult({
-      ...decompressFileResult,
-      sourcePath,
-      destinationPath,
-      operation: 'decompress',
-    });
+      setFileOperationResult({
+        ...decompressFileResult,
+        sourcePath,
+        destinationPath,
+        operation: 'decompress',
+      });
+    } catch (error) {
+      console.log({ error });
+    }
   };
 
   return (

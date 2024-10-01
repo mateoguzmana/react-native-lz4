@@ -185,9 +185,9 @@ out:
 
 std::function<void(size_t, size_t)> createProgressCallback(jsi::Runtime &runtime, const jsi::Value *arguments, size_t count)
 {
-    if (count >= 3 && arguments[2].isObject() && arguments[2].asObject(runtime).isFunction(runtime))
+    if (count >= 4 && arguments[3].isObject() && arguments[3].asObject(runtime).isFunction(runtime))
     {
-        auto jsCallback = std::make_shared<jsi::Function>(arguments[2].asObject(runtime).asFunction(runtime));
+        auto jsCallback = std::make_shared<jsi::Function>(arguments[3].asObject(runtime).asFunction(runtime));
 
         return [jsCallback, &runtime](size_t processedSize, size_t totalSize)
         {
@@ -300,61 +300,51 @@ namespace lz4
                             }));
 
         lz4.setProperty(runtime,
-                        "compressFile",
+                        "performFileOperation",
                         jsi::Function::createFromHostFunction(
                             runtime,
-                            jsi::PropNameID::forAscii(runtime, "compressFile"),
-                            2, // number of arguments
+                            jsi::PropNameID::forAscii(runtime, "performFileOperation"),
+                            3, // required number of arguments (mode, sourcePath, destinationPath)
                             [](jsi::Runtime &runtime,
                                const jsi::Value &thisValue,
                                const jsi::Value *arguments,
                                size_t count) -> jsi::Value
                             {
-                                if (count < 2 || !arguments[0].isString() || !arguments[1].isString())
+                                if (count < 3 || !arguments[0].isString() || !arguments[1].isString() || !arguments[2].isString())
                                 {
-                                    throw jsi::JSError(runtime, "compressFile() requires two string arguments");
+                                    throw jsi::JSError(runtime, "performFileOperation() requires three string arguments: mode ('compress' or 'decompress'), sourcePath & destinationPath");
                                 }
 
-                                std::string sourcePath = arguments[0].getString(runtime).utf8(runtime);
-                                std::string destinationPath = arguments[1].getString(runtime).utf8(runtime);
+                                std::string mode = arguments[0].getString(runtime).utf8(runtime);
+                                std::string sourcePath = arguments[1].getString(runtime).utf8(runtime);
+                                std::string destinationPath = arguments[2].getString(runtime).utf8(runtime);
+
                                 std::function<void(size_t, size_t)> progressCallback = createProgressCallback(runtime, arguments, count);
 
-                                FileOperationResult fileOperationResult = lz4::performFileOperation(
-                                    sourcePath, destinationPath,
-                                    [progressCallback](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
-                                    {
-                                        return compress_file(f_in, f_out, progressCallback);
-                                    });
+                                FileOperationResult fileOperationResult;
 
-                                return createJsResultObject(runtime, fileOperationResult);
-                            }));
-
-        lz4.setProperty(runtime,
-                        "decompressFile",
-                        jsi::Function::createFromHostFunction(
-                            runtime,
-                            jsi::PropNameID::forAscii(runtime, "decompressFile"),
-                            2, // number of arguments
-                            [](jsi::Runtime &runtime,
-                               const jsi::Value &thisValue,
-                               const jsi::Value *arguments,
-                               size_t count) -> jsi::Value
-                            {
-                                if (count < 2 || !arguments[0].isString() || !arguments[1].isString())
+                                if (mode == "compress")
                                 {
-                                    throw jsi::JSError(runtime, "decompressFile() requires two string arguments");
+                                    fileOperationResult = lz4::performFileOperation(
+                                        sourcePath, destinationPath,
+                                        [progressCallback](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
+                                        {
+                                            return compress_file(f_in, f_out, progressCallback);
+                                        });
                                 }
-
-                                std::string sourcePath = arguments[0].getString(runtime).utf8(runtime);
-                                std::string destinationPath = arguments[1].getString(runtime).utf8(runtime);
-                                std::function<void(size_t, size_t)> progressCallback = createProgressCallback(runtime, arguments, count);
-
-                                FileOperationResult fileOperationResult = lz4::performFileOperation(
-                                    sourcePath, destinationPath,
-                                    [progressCallback](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
-                                    {
-                                        return decompress_file(f_in, f_out, progressCallback);
-                                    });
+                                else if (mode == "decompress")
+                                {
+                                    fileOperationResult = lz4::performFileOperation(
+                                        sourcePath, destinationPath,
+                                        [progressCallback](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
+                                        {
+                                            return decompress_file(f_in, f_out, progressCallback);
+                                        });
+                                }
+                                else
+                                {
+                                    throw jsi::JSError(runtime, "Invalid mode. Use 'compress' or 'decompress'.");
+                                }
 
                                 return createJsResultObject(runtime, fileOperationResult);
                             }));
