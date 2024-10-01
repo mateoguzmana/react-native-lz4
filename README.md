@@ -9,7 +9,8 @@ The library could also be extended to support other LZ4 features if needed.
 ## Installation
 
 ```sh
-npm install react-native-lz4
+npm i react-native-lz4
+cd ios && pod install
 ```
 
 ## Usage
@@ -17,15 +18,34 @@ npm install react-native-lz4
 ```ts
 import { compressFile, decompressFile } from 'react-native-lz4';
 
-const compressionResult = await compressFile('path/to/file', 'path/to/output');
-const decompressionResult = await decompressFile('path/to/file', 'path/to/output');
+function onProgress(processedSize: number, totalSize: number) {
+  // e.g. { processedSize: 50, totalSize: 100, progress: '50%' }
+  console.log({
+    processedSize,
+    totalSize,
+    progress: `${Math.round((processedSize / totalSize) * 100)}%`,
+  });
+}
 
-console.log(compressionResult)
+const compressionResult = await compressFile(
+  'path/to/file',
+  'path/to/output',
+  onProgress
+);
+const decompressionResult = await decompressFile(
+  'path/to/file',
+  'path/to/output',
+  onProgress
+);
+
+console.log(compressionResult);
 // { success: true, message: 'File compressed successfully', originalSize: 100, finalSize: 50 }
 
-console.log(decompressionResult)
+console.log(decompressionResult);
 // { success: true, message: 'File decompressed successfully', originalSize: 50, finalSize: 100 }
 ```
+
+See the [example](example) for a full working example.
 
 ## Contributing
 

@@ -26,26 +26,7 @@ struct FileOperationResult
     size_t finalSize; // Can represent either compressed or decompressed size
 };
 
-static size_t
-get_file_size(char *filename)
-{
-    struct stat statbuf;
-
-    if (filename == NULL)
-    {
-        return 0;
-    }
-
-    if (stat(filename, &statbuf))
-    {
-        return 0;
-    }
-
-    return statbuf.st_size;
-}
-
-// @TODO: get_file_size and get_file_size_by_file are the same with different input types. Combine them.
-static size_t get_file_size_by_file(FILE *file)
+static size_t get_file_size(FILE *file)
 {
     if (file == nullptr)
     {
@@ -78,7 +59,7 @@ static int compress_file(FILE *f_in, FILE *f_out, std::function<void(size_t, siz
         return 1;
     }
 
-    size_t totalSize = get_file_size_by_file(f_in);
+    size_t totalSize = get_file_size(f_in);
     size_t processedSize = 0;
 
     /* Of course, you can also use prefsPtr to
@@ -147,7 +128,7 @@ static int decompress_file(FILE *f_in, FILE *f_out, std::function<void(size_t, s
         printf("error: memory allocation failed \n");
     }
 
-    size_t totalSize = get_file_size_by_file(f_in);
+    size_t totalSize = get_file_size(f_in);
     size_t processedSize = 0;
 
     ret = LZ4F_readOpen(&lz4fRead, f_in);
@@ -200,23 +181,6 @@ out:
     }
 
     return 0;
-}
-
-// Function to create a directory
-bool createDirectory(const std::string &path)
-{
-    struct stat info;
-    if (stat(path.c_str(), &info) != 0)
-    {
-        // Try to create the directory
-        if (mkdir(path.c_str(), 0777) != 0)
-        {
-            std::cerr << "Error creating directory: " << path << std::endl;
-            std::cerr << "Error code: " << errno << " (" << strerror(errno) << ")" << std::endl;
-            return false;
-        }
-    }
-    return true;
 }
 
 // Helper function to create a jsi::Object from FileOperationResult
@@ -286,6 +250,9 @@ namespace lz4
 
         LZ4F_errorCode_t ret = operation(inpFp, outFp);
 
+        size_t originalSize = get_file_size(inpFp);
+        size_t finalSize = get_file_size(outFp);
+
         fclose(inpFp);
         fclose(outFp);
 
@@ -293,9 +260,6 @@ namespace lz4
         {
             return {false, LZ4F_getErrorName(ret), 0, 0};
         }
-
-        size_t originalSize = get_file_size(const_cast<char *>(sourceFilePath));
-        size_t finalSize = get_file_size(const_cast<char *>(destinationFilePath));
 
         return {true, "Operation completed", originalSize, finalSize};
     }
