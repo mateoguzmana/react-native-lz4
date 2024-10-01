@@ -1,5 +1,6 @@
 import { NativeModules, Platform } from 'react-native';
 import { formatFilePath } from './utils/formatFilePath';
+import type { FileOperationResult, Lz4Type } from './types';
 
 const LINKING_ERROR =
   `The package 'react-native-lz4' doesn't seem to be linked. Make sure: \n\n` +
@@ -25,44 +26,7 @@ const Lz4 = Lz4Module
       }
     );
 
-/**
- * Represents the result of a file operation.
- */
-export interface FileOperationResult {
-  /**
-   * Indicates whether the operation was successful.
-   */
-  success: boolean;
-  /**
-   * A message describing the result of the operation.
-   */
-  message: string;
-  /**
-   * The original size of the file in bytes.
-   */
-  originalSize: number;
-  /**
-   * The final size of the file in bytes. Represents the size of the compressed or decompressed file.
-   */
-  finalSize: number;
-}
-
-type FileOperationMode = 'compress' | 'decompress';
-
-interface Lz4Type {
-  lz4: {
-    getLz4VersionNumber: () => Promise<number>;
-    getLz4VersionString: () => Promise<string>;
-    performFileOperation: (
-      mode: FileOperationMode,
-      sourcePath: string,
-      destinationPath: string,
-      onProgress?: (processedSize: number, totalSize: number) => void
-    ) => Promise<FileOperationResult>;
-  };
-}
-
-const _global = global as unknown as Lz4Type;
+export const _global = global as unknown as Lz4Type;
 
 /**
  * Initializes the Lz4 module.
@@ -139,3 +103,5 @@ export function decompressFile(
     onProgress
   );
 }
+
+export * from './types';
