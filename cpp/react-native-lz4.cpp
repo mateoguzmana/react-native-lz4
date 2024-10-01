@@ -183,18 +183,6 @@ out:
     return 0;
 }
 
-// Helper function to create a jsi::Object from FileOperationResult
-jsi::Object createJsResultObject(jsi::Runtime &runtime, const FileOperationResult &fileOperationResult)
-{
-    jsi::Object result = jsi::Object(runtime);
-    result.setProperty(runtime, "success", jsi::Value(fileOperationResult.success));
-    result.setProperty(runtime, "message", jsi::String::createFromUtf8(runtime, fileOperationResult.message));
-    result.setProperty(runtime, "originalSize", jsi::Value(static_cast<double>(fileOperationResult.originalSize)));
-    result.setProperty(runtime, "finalSize", jsi::Value(static_cast<double>(fileOperationResult.finalSize)));
-
-    return result;
-}
-
 std::function<void(size_t, size_t)> createProgressCallback(jsi::Runtime &runtime, const jsi::Value *arguments, size_t count)
 {
     if (count >= 3 && arguments[2].isObject() && arguments[2].asObject(runtime).isFunction(runtime))
@@ -211,6 +199,18 @@ std::function<void(size_t, size_t)> createProgressCallback(jsi::Runtime &runtime
     }
 
     return nullptr; // Return nullptr if no valid callback is provided
+}
+
+// Helper function to create a jsi::Object from FileOperationResult
+jsi::Object createJsResultObject(jsi::Runtime &runtime, const FileOperationResult &fileOperationResult)
+{
+    jsi::Object result = jsi::Object(runtime);
+    result.setProperty(runtime, "success", jsi::Value(fileOperationResult.success));
+    result.setProperty(runtime, "message", jsi::String::createFromUtf8(runtime, fileOperationResult.message));
+    result.setProperty(runtime, "originalSize", jsi::Value(static_cast<double>(fileOperationResult.originalSize)));
+    result.setProperty(runtime, "finalSize", jsi::Value(static_cast<double>(fileOperationResult.finalSize)));
+
+    return result;
 }
 
 namespace lz4
@@ -262,26 +262,6 @@ namespace lz4
         }
 
         return {true, "Operation completed", originalSize, finalSize};
-    }
-
-    FileOperationResult compressFile(const std::string &sourcePath, const std::string &destinationPath, std::function<void(size_t, size_t)> progressCallback = nullptr)
-    {
-        return performFileOperation(
-            sourcePath, destinationPath,
-            [progressCallback](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
-            {
-                return compress_file(f_in, f_out, progressCallback);
-            });
-    }
-
-    FileOperationResult decompressFile(const std::string &sourcePath, const std::string &destinationPath, std::function<void(size_t, size_t)> progressCallback = nullptr)
-    {
-        return performFileOperation(
-            sourcePath, destinationPath,
-            [progressCallback](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
-            {
-                return decompress_file(f_in, f_out, progressCallback);
-            });
     }
 
     // initializer function that exposes the LZ4 functions to JavaScript
@@ -339,7 +319,12 @@ namespace lz4
                                 std::string destinationPath = arguments[1].getString(runtime).utf8(runtime);
                                 std::function<void(size_t, size_t)> progressCallback = createProgressCallback(runtime, arguments, count);
 
-                                FileOperationResult fileOperationResult = lz4::compressFile(sourcePath, destinationPath, progressCallback);
+                                FileOperationResult fileOperationResult = lz4::performFileOperation(
+                                    sourcePath, destinationPath,
+                                    [progressCallback](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
+                                    {
+                                        return compress_file(f_in, f_out, progressCallback);
+                                    });
 
                                 return createJsResultObject(runtime, fileOperationResult);
                             }));
@@ -364,7 +349,12 @@ namespace lz4
                                 std::string destinationPath = arguments[1].getString(runtime).utf8(runtime);
                                 std::function<void(size_t, size_t)> progressCallback = createProgressCallback(runtime, arguments, count);
 
-                                FileOperationResult fileOperationResult = lz4::decompressFile(sourcePath, destinationPath, progressCallback);
+                                FileOperationResult fileOperationResult = lz4::performFileOperation(
+                                    sourcePath, destinationPath,
+                                    [progressCallback](FILE *f_in, FILE *f_out) -> LZ4F_errorCode_t
+                                    {
+                                        return decompress_file(f_in, f_out, progressCallback);
+                                    });
 
                                 return createJsResultObject(runtime, fileOperationResult);
                             }));
