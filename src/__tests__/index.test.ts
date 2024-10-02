@@ -3,9 +3,9 @@ import {
   decompressFile,
   getLz4VersionNumber,
   getLz4VersionString,
-  _global,
   type FileOperationResult,
 } from '../index';
+import { _global } from '../module';
 
 jest.mock('react-native', () => ({
   Platform: {
