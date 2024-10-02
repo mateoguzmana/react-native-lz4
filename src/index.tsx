@@ -104,4 +104,4 @@ export function decompressFile(
   );
 }
 
-export * from './types';
+export type { FileOperationResult, FileOperationMode } from './types';

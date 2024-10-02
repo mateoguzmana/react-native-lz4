@@ -25,6 +25,10 @@ export interface FileOperationResult {
  */
 export type FileOperationMode = 'compress' | 'decompress';
 
+/**
+ * Represents the LZ4 module.
+ * @internal
+ */
 export interface Lz4Type {
   lz4: {
     getLz4VersionNumber: () => Promise<number>;
