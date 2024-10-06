@@ -1251,7 +1251,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - react-native-lz4 (0.0.1-alpha.2):
+  - react-native-lz4 (0.0.1-alpha.3):
     - DoubleConversion
     - glog
     - RCT-Folly (= 2024.01.01.00)
@@ -1789,7 +1789,7 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: 987cf7e0e0e7129250a48b807e70d3b906c726cf
   react-native-document-picker: ccca729bfa32ac6f20db6c48dd8ad4ca29ea8795
   react-native-image-picker: eb2fc4ddc8c69b1d0376afd3267a06d46f203fee
-  react-native-lz4: b1f85c1e502300209fa9b8483f068574802db1b1
+  react-native-lz4: b2247ac97a1b66220e4127b58634408e5dcf57e2
   React-nativeconfig: 4a9543185905fe41014c06776bf126083795aed9
   React-NativeModulesApple: 651670a799672bd54469f2981d91493dda361ddf
   React-perflogger: 3bbb82f18e9ac29a1a6931568e99d6305ef4403b
