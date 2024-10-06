@@ -1,6 +1,7 @@
 #ifndef LZ4_H
 #define LZ4_H
 
+#include <string>
 #include <jsi/jsi.h>
 
 namespace lz4
