@@ -125,7 +125,7 @@ We use [release-it](https://github.com/release-it/release-it) to make it easier 
 To publish new versions, run the following:
 
 ```sh
-yarn release
+yarn release patch --preRelease=alpha
 ```
 
 ### Scripts
