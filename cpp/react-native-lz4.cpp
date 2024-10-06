@@ -3,16 +3,11 @@
 #include "lz4file.h"
 #include <stdio.h>
 #include <string>
-#include <iostream>
-#include <fstream>
-#include <vector>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <cstring>
-#include <cerrno>
 #include <assert.h>
 #include <stdlib.h>
-#include <string.h>
 
 using namespace facebook;
 
