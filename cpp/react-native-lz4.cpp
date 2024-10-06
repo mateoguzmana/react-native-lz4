@@ -1,6 +1,6 @@
 #include "react-native-lz4.h"
-#include "lz4.h"
-#include "lz4file.h"
+#include "external/lz4.h"
+#include "external/lz4file.h"
 #include <stdio.h>
 #include <string>
 #include <sys/stat.h>

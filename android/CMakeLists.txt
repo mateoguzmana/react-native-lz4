@@ -9,17 +9,17 @@ file(TO_CMAKE_PATH "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp
 add_library(react-native-lz4            SHARED
             ${libPath}
             ../cpp/react-native-lz4.cpp
-            ../cpp/lz4.h
-            ../cpp/lz4.c
-            ../cpp/lz4hc.h
-            ../cpp/lz4hc.c
-            ../cpp/lz4frame.h
-            ../cpp/lz4frame.c
-            ../cpp/lz4frame_static.h
-            ../cpp/lz4file.h
-            ../cpp/lz4file.c
-            ../cpp/xxhash.h
-            ../cpp/xxhash.c
+            ../cpp/external/lz4.h
+            ../cpp/external/lz4.c
+            ../cpp/external/lz4hc.h
+            ../cpp/external/lz4hc.c
+            ../cpp/external/lz4frame.h
+            ../cpp/external/lz4frame.c
+            ../cpp/external/lz4frame_static.h
+            ../cpp/external/lz4file.h
+            ../cpp/external/lz4file.c
+            ../cpp/external/xxhash.h
+            ../cpp/external/xxhash.c
             cpp-adapter.cpp
 )
 
