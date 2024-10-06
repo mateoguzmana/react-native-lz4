@@ -1,11 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Animated,
-} from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View, Text } from 'react-native';
 import {
   compressFile,
   decompressFile,
@@ -18,16 +12,9 @@ import {
   type ImageLibraryOptions,
 } from 'react-native-image-picker';
 import { pick } from 'react-native-document-picker';
-
-const MAX_STRING_LENGTH = 50;
-
-const formatString = (value: string) => {
-  return value.length > MAX_STRING_LENGTH
-    ? value.slice(0, MAX_STRING_LENGTH) +
-        '...' +
-        value.slice(-MAX_STRING_LENGTH)
-    : value;
-};
+import { ProgressBar } from './components/ProgressBar';
+import { OptionButton } from './components/OptionButton';
+import { PropertyLabel } from './components/PropertyLabel';
 
 interface FileOperationResultExtended extends FileOperationResult {
   sourcePath: string;
@@ -42,18 +29,25 @@ export default function App() {
     useState<FileOperationResultExtended>();
   const [progress, setProgress] = useState<number | undefined>();
 
+  const onReset = () => {
+    setProgress(undefined);
+    setFileOperationResult(undefined);
+  };
+
   /**
    * Example of a callback function that is called with the progress of the operation.
    * @param processedSize
    * @param totalSize
    */
-  function onProgress(processedSize: number, totalSize: number) {
+  const onProgress = (processedSize: number, totalSize: number) => {
     const _progress = Math.round((processedSize / totalSize) * 100);
 
-    if (_progress % 50 === 0) {
+    // doing it in intervals of 10% to avoid unnecessary re-renders.
+    // it would be more efficient to have this progress in a ref and using reanimated to animate the progress
+    if (_progress % 10 === 0) {
       setProgress(_progress);
     }
-  }
+  };
 
   const executeGetLz4VersionNumber = async () => {
     const _versionNumber = await getLz4VersionNumber();
@@ -70,6 +64,8 @@ export default function App() {
   };
 
   const executeCompressFileUsingImageLibrary = async () => {
+    onReset();
+
     try {
       const options: ImageLibraryOptions = {
         mediaType: 'photo',
@@ -108,6 +104,8 @@ export default function App() {
   };
 
   const executeCompressFileUsingDocumentPicker = async () => {
+    onReset();
+
     const [file] = await pick({ copyTo: 'cachesDirectory' });
 
     if (!file || !file.fileCopyUri) return;
@@ -134,6 +132,8 @@ export default function App() {
   };
 
   const executeDecompressFile = async () => {
+    onReset();
+
     const [file] = await pick({ copyTo: 'cachesDirectory' });
 
     if (!file || !file.fileCopyUri) return;
@@ -159,8 +159,6 @@ export default function App() {
     }
   };
 
-  console.log('re-render');
-
   return (
     <View style={styles.container}>
       {versionNumber && (
@@ -174,14 +172,12 @@ export default function App() {
       {fileOperationResult && (
         <View style={styles.subContainer}>
           {Object.entries(fileOperationResult).map(([key, value]) => (
-            <Text key={key} style={styles.label}>
-              {key}: {formatString(value.toString())}
-            </Text>
+            <PropertyLabel title={key} value={value} key={key} />
           ))}
         </View>
       )}
 
-      {progress && <ProgressBar progress={progress} />}
+      {progress ? <ProgressBar progress={progress} /> : null}
 
       <View style={styles.separator} />
 
@@ -210,46 +206,6 @@ export default function App() {
   );
 }
 
-interface ButtonProps {
-  title: string;
-  onPress(): void;
-}
-
-function OptionButton({ title, onPress }: ButtonProps) {
-  return (
-    <TouchableOpacity onPress={onPress} style={styles.button}>
-      <Text style={styles.buttonText}>{title}</Text>
-    </TouchableOpacity>
-  );
-}
-
-interface ProgressBarProps {
-  progress: number;
-}
-
-function ProgressBar({ progress }: ProgressBarProps) {
-  const progressAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(progressAnim, {
-      toValue: progress, // final value for the progress
-      duration: 500, // animation duration in ms
-      useNativeDriver: false, // native driver should be false for width animation
-    }).start();
-  }, [progress, progressAnim]);
-
-  const animatedWidth = progressAnim.interpolate({
-    inputRange: [0, 100],
-    outputRange: ['0%', '100%'], // percentage for width based on progress
-  });
-
-  return (
-    <View style={styles.container}>
-      <Animated.View style={[styles.progressBar, { width: animatedWidth }]} />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -265,23 +221,9 @@ const styles = StyleSheet.create({
     color: '#333',
     padding: 10,
   },
-  button: {
-    backgroundColor: 'transparent',
-    color: '#2196F3',
-    margin: 4,
-  },
-  buttonText: {
-    color: '#2196F3',
-    padding: 10,
-  },
   separator: {
     marginVertical: 10,
     height: 1,
-    width: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  progressBar: {
-    height: 10,
     width: '100%',
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
   },
