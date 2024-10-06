@@ -1,6 +1,6 @@
 {
   "name": "react-native-lz4",
-  "version": "0.0.1-alpha.2",
+  "version": "0.0.1-alpha.3",
   "description": "LZ4 – React Native bindings for an extremely fast compression algorithm.",
   "source": "./src/index.tsx",
   "main": "./lib/commonjs/index.js",
