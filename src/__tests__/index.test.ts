@@ -32,7 +32,7 @@ describe('LZ4 Module', () => {
     (global as any).lz4 = {
       getLz4VersionNumber: jest.fn(() => Promise.resolve(1001)),
       getLz4VersionString: jest.fn(() => Promise.resolve('1.0.0')),
-      performFileOperation: jest.fn(() => Promise.resolve(fileOperationResult)),
+      performFileOperation: jest.fn(() => fileOperationResult),
     };
   });
 

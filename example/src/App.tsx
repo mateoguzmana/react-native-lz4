@@ -52,8 +52,6 @@ export default function App() {
   const executeGetLz4VersionNumber = async () => {
     const _versionNumber = await getLz4VersionNumber();
 
-    console.log({ _versionNumber });
-
     setVersionNumber(_versionNumber);
   };
 
@@ -95,7 +93,12 @@ export default function App() {
             operation: 'compress',
           });
         } catch (error) {
-          console.log({ error });
+          setFileOperationResult({
+            ...(error as FileOperationResult),
+            sourcePath,
+            destinationPath,
+            operation: 'compress',
+          });
         }
       }
     } catch (error) {
@@ -106,26 +109,35 @@ export default function App() {
   const executeCompressFileUsingDocumentPicker = async () => {
     onReset();
 
-    const [file] = await pick({ copyTo: 'cachesDirectory' });
-
-    if (!file || !file.fileCopyUri) return;
-
-    const sourcePath = file.fileCopyUri;
-    const destinationPath = file.fileCopyUri.replace(/(.*)(\..*)/, '$1.lz4');
-
     try {
-      const decompressFileResult = await compressFile(
-        sourcePath,
-        destinationPath,
-        onProgress
-      );
+      const [file] = await pick({ copyTo: 'cachesDirectory' });
 
-      setFileOperationResult({
-        ...decompressFileResult,
-        sourcePath,
-        destinationPath,
-        operation: 'compress',
-      });
+      if (!file || !file.fileCopyUri) return;
+
+      const sourcePath = file.fileCopyUri;
+      const destinationPath = file.fileCopyUri.replace(/(.*)(\..*)/, '$1.lz4');
+
+      try {
+        const compressFileResult = await compressFile(
+          sourcePath,
+          destinationPath,
+          onProgress
+        );
+
+        setFileOperationResult({
+          ...compressFileResult,
+          sourcePath,
+          destinationPath,
+          operation: 'compress',
+        });
+      } catch (error) {
+        setFileOperationResult({
+          ...(error as FileOperationResult),
+          sourcePath,
+          destinationPath,
+          operation: 'compress',
+        });
+      }
     } catch (error) {
       console.log({ error });
     }
@@ -134,26 +146,35 @@ export default function App() {
   const executeDecompressFile = async () => {
     onReset();
 
-    const [file] = await pick({ copyTo: 'cachesDirectory' });
-
-    if (!file || !file.fileCopyUri) return;
-
-    const sourcePath = file.fileCopyUri;
-    const destinationPath = file.fileCopyUri.replace(/(.*)(\..*)/, '$1.lz4');
-
     try {
-      const decompressFileResult = await decompressFile(
-        sourcePath,
-        destinationPath,
-        onProgress
-      );
+      const [file] = await pick({ copyTo: 'cachesDirectory' });
 
-      setFileOperationResult({
-        ...decompressFileResult,
-        sourcePath,
-        destinationPath,
-        operation: 'decompress',
-      });
+      if (!file || !file.fileCopyUri) return;
+
+      const sourcePath = file.fileCopyUri;
+      const destinationPath = file.fileCopyUri.replace(/(.*)(\..*)/, '$1.lz4');
+
+      try {
+        const decompressFileResult = await decompressFile(
+          sourcePath,
+          destinationPath,
+          onProgress
+        );
+
+        setFileOperationResult({
+          ...decompressFileResult,
+          sourcePath,
+          destinationPath,
+          operation: 'decompress',
+        });
+      } catch (error) {
+        setFileOperationResult({
+          ...(error as FileOperationResult),
+          sourcePath,
+          destinationPath,
+          operation: 'decompress',
+        });
+      }
     } catch (error) {
       console.log({ error });
     }

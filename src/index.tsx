@@ -50,12 +50,20 @@ export function compressFile(
   const strippedSourcePath = formatFilePath(sourcePath);
   const strippedDestinationPath = formatFilePath(destinationPath);
 
-  return _global.lz4.performFileOperation(
+  const result = _global.lz4.performFileOperation(
     'compress',
     strippedSourcePath,
     strippedDestinationPath,
     onProgress
   );
+
+  return new Promise((resolve, reject) => {
+    if (result.success) {
+      resolve(result);
+    } else {
+      reject(result);
+    }
+  });
 }
 
 /**
@@ -73,12 +81,20 @@ export function decompressFile(
   const strippedSourcePath = formatFilePath(sourcePath);
   const strippedDestinationPath = formatFilePath(destinationPath);
 
-  return _global.lz4.performFileOperation(
-    'decompress',
-    strippedSourcePath,
-    strippedDestinationPath,
-    onProgress
-  );
+  return new Promise((resolve, reject) => {
+    const result = _global.lz4.performFileOperation(
+      'decompress',
+      strippedSourcePath,
+      strippedDestinationPath,
+      onProgress
+    );
+
+    if (result.success) {
+      resolve(result);
+    } else {
+      reject(result);
+    }
+  });
 }
 
 export type { FileOperationResult, FileOperationMode } from './types';

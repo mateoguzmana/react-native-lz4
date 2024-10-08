@@ -38,6 +38,6 @@ export interface Lz4Type {
       sourcePath: string,
       destinationPath: string,
       onProgress?: (processedSize: number, totalSize: number) => void
-    ) => Promise<FileOperationResult>;
+    ) => FileOperationResult;
   };
 }
