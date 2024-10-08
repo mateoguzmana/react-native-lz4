@@ -338,7 +338,12 @@ namespace lz4
                                 }
                                 else
                                 {
-                                    throw jsi::JSError(runtime, "Invalid mode. Use 'compress' or 'decompress'.");
+                                    return createJsResultObject(runtime, {
+                                        success : false,
+                                        message : "Invalid mode '" + mode + "', valid modes are 'compress' and 'decompress'",
+                                        originalSize : 0,
+                                        finalSize : 0
+                                    });
                                 }
 
                                 return createJsResultObject(runtime, fileOperationResult);
